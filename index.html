@@ -469,8 +469,13 @@
                     🔍 ค้นหาราคาหุ้นเรียลไทม์ (Live Price Lookup)
                 </h3>
                 <p style="font-size:0.68rem; color:var(--text-muted); margin-bottom:0.85rem;">
-                    พิมพ์สัญลักษณ์ย่อหุ้น (เช่น AAPL, TSLA, BTC-USD) เพื่อตรวจสอบราคาปัจจุบันได้ทันที
+                    พิมพ์สัญลักษณ์ย่อหุ้นเพื่อตรวจสอบราคาและข่าวสารปัจจุบันได้ทันที
                 </p>
+                <!-- Market Toggle -->
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+                    <button id="marketBtn-US" class="btn btn-primary" style="padding:0.25rem 0.6rem; font-size:0.68rem; line-height:1;" onclick="setSearchMarket('US')">🇺🇸 หุ้นสหรัฐฯ (US)</button>
+                    <button id="marketBtn-TH" class="btn btn-ghost" style="padding:0.25rem 0.6rem; font-size:0.68rem; line-height:1;" onclick="setSearchMarket('TH')">🇹🇭 หุ้นไทย (TH)</button>
+                </div>
                 <div style="display:flex; gap:0.5rem; margin-bottom:0.85rem;">
                     <input type="text" id="searchTickerInput" placeholder="เช่น AAPL, TSLA, BTC-USD" style="flex:1; padding:0.5rem 0.75rem; border:1px solid var(--border-bright); border-radius:8px; font-size:0.8rem; font-weight:600; outline:none; text-transform:uppercase;" onkeydown="if(event.key==='Enter') searchStockPrice()">
                     <button class="btn btn-primary" onclick="searchStockPrice()">🔍 ค้นหา</button>
@@ -668,8 +673,10 @@ let isWidgetVisible = true;
    FETCH NEWS (rss2json.com)
 ══════════════════════════════════════════ */
 async function fetchTicker(symbol) {
+    const isThai = symbol.endsWith('.BK');
+    const region = isThai ? 'TH&lang=th-TH' : 'US&lang=en-US';
     const rss = encodeURIComponent(
-        `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${symbol}&region=US&lang=en-US`
+        `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${symbol}&region=${region}`
     );
     const url = `https://api.rss2json.com/v1/api.json?rss_url=${rss}`;
     try {
@@ -1004,15 +1011,100 @@ function toggleWidget() {
 /* ══════════════════════════════════════════
    LIVE PRICE & NEWS SEARCH (CORS-SAFE)
 ══════════════════════════════════════════ */
+let searchMarket = 'US';
+
+function setSearchMarket(m) {
+    searchMarket = m;
+    const btnUS = document.getElementById('marketBtn-US');
+    const btnTH = document.getElementById('marketBtn-TH');
+    const input = document.getElementById('searchTickerInput');
+    
+    if (m === 'US') {
+        btnUS.className = 'btn btn-primary';
+        btnTH.className = 'btn btn-ghost';
+        input.placeholder = 'เช่น AAPL, TSLA, BTC-USD';
+    } else {
+        btnUS.className = 'btn btn-ghost';
+        btnTH.className = 'btn btn-primary';
+        input.placeholder = 'เช่น PTT, CPALL, AOT';
+    }
+}
+
+let activeAnalysisTab = 'news';
+
+function switchAnalysisTab(tab) {
+    activeAnalysisTab = tab;
+    const tabNews = document.getElementById('analysis-tab-content-news');
+    const tabChart = document.getElementById('analysis-tab-content-chart');
+    const btnNews = document.getElementById('analysis-tab-news');
+    const btnChart = document.getElementById('analysis-tab-chart');
+    
+    if (!tabNews || !tabChart) return;
+    
+    if (tab === 'news') {
+        tabNews.style.display = 'block';
+        tabChart.style.display = 'none';
+        btnNews.style.borderBottom = '2px solid var(--accent-blue)';
+        btnNews.style.color = 'var(--accent-blue)';
+        btnChart.style.borderBottom = 'none';
+        btnChart.style.color = 'var(--text-muted)';
+    } else {
+        tabNews.style.display = 'none';
+        tabChart.style.display = 'block';
+        btnNews.style.borderBottom = 'none';
+        btnNews.style.color = 'var(--text-muted)';
+        btnChart.style.borderBottom = '2px solid var(--accent-blue)';
+        btnChart.style.color = 'var(--accent-blue)';
+    }
+}
+
+function renderMiniChart(symbol) {
+    const container = document.getElementById('tv-mini-chart');
+    if (!container) return;
+    container.innerHTML = ''; // Clear previous chart
+    
+    let tvSymbol = symbol;
+    if (symbol.endsWith('.BK')) {
+        tvSymbol = 'SET:' + symbol.replace('.BK', '');
+    } else {
+        tvSymbol = mapToTradingView(symbol);
+    }
+    
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+    script.async = true;
+    
+    const config = {
+        "symbol": tvSymbol,
+        "width": "100%",
+        "height": "100%",
+        "locale": "th",
+        "dateRange": "3M",
+        "colorTheme": "light",
+        "isTransparent": false,
+        "autosize": true,
+        "largeChartUrl": ""
+    };
+    
+    script.text = JSON.stringify(config);
+    container.appendChild(script);
+}
+
 async function searchStockPrice() {
     const input = document.getElementById('searchTickerInput');
-    const symbol = input.value.trim().toUpperCase();
+    let symbol = input.value.trim().toUpperCase();
     const resultBox = document.getElementById('searchResultBox');
     const analysisContent = document.getElementById('analysisResultContent');
     
     if (!symbol) {
         alert('กรุณากรอกสัญลักษณ์หุ้น');
         return;
+    }
+
+    // Auto-append .BK suffix for Thai Stocks if not typed
+    if (searchMarket === 'TH' && !symbol.endsWith('.BK')) {
+        symbol = symbol + '.BK';
     }
     
     // Set loading states
@@ -1037,8 +1129,8 @@ async function searchStockPrice() {
         tdKey = localStorage.getItem('pnws_twelvedata_key');
     } catch(e) {}
 
-    // 1. Try Twelve Data first if key exists
-    if (tdKey) {
+    // 1. Try Twelve Data first if key exists (Note: Thai stocks might fail on free tier)
+    if (tdKey && !symbol.endsWith('.BK')) {
         try {
             const url = `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${tdKey}`;
             const r = await fetch(url);
@@ -1077,13 +1169,14 @@ async function searchStockPrice() {
     }
 
     if (price) {
-        // Fetch news for the symbol
+        // Fetch news for the symbol (fetchTicker automatically detects .BK)
         const news = await fetchTicker(symbol);
         
         // 1. Render Left Box (Price Info)
         const sign = change >= 0 ? '+' : '';
         const color = change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
         const changeText = change !== null ? `${sign}${change.toFixed(2)} (${sign}${changePercent.toFixed(2)}%)` : '';
+        const currency = symbol.endsWith('.BK') ? '฿' : '$';
         
         // Check if ticker already exists in portfolio
         const exists = tickers.some(t => t.symbol === symbol);
@@ -1094,7 +1187,7 @@ async function searchStockPrice() {
         resultBox.innerHTML = `
             <div style="width:100%; text-align:left; background:#fff; border:1px solid var(--border); border-radius:8px; padding:0.85rem; box-shadow:0 1px 3px rgba(0,0,0,0.02); box-sizing:border-box;">
                 <div style="font-size:0.95rem; font-weight:700; color:var(--text-primary);">${symbol}</div>
-                <div style="font-size:1.4rem; font-weight:800; font-family:'Inter', monospace; margin-top:3px; color:var(--text-primary);">$${price.toFixed(2)}</div>
+                <div style="font-size:1.4rem; font-weight:800; font-family:'Inter', monospace; margin-top:3px; color:var(--text-primary);">${currency}${price.toFixed(2)}</div>
                 ${changeText ? `<div style="font-size:0.75rem; font-weight:600; color:${color}; margin-top:1px;">${changeText}</div>` : ''}
                 <div style="display:flex; justify-content:flex-end;">
                     ${addBtnHtml}
@@ -1110,8 +1203,8 @@ async function searchStockPrice() {
         let score = 0;
 
         if (news && news.length > 0) {
-            const posWords = ['up', 'gain', 'rise', 'higher', 'buy', 'bull', 'grow', 'surge', 'soar', 'jump', 'beat', 'upgrade', 'outperform', 'profit', 'positive', 'strong', 'rally', 'advances', 'bullish', 'wins', 'adds', 'high', 'optimism', 'beat expectation'];
-            const negWords = ['down', 'drop', 'fall', 'lower', 'sell', 'bear', 'decline', 'plummet', 'sink', 'slide', 'miss', 'downgrade', 'underperform', 'loss', 'negative', 'weak', 'plunge', 'revolt', 'slump', 'bearish', 'cut', 'warning', 'low', 'pessimism', 'layoff', 'protest'];
+            const posWords = ['up', 'gain', 'rise', 'higher', 'buy', 'bull', 'grow', 'surge', 'soar', 'jump', 'beat', 'upgrade', 'outperform', 'profit', 'positive', 'strong', 'rally', 'advances', 'bullish', 'wins', 'adds', 'high', 'optimism', 'beat expectation', 'ขึ้น', 'บวก', 'กำไร', 'โต', 'พุ่ง', 'ซื้อ', 'เป้า', 'ดีเกินคาด', 'หนุน', 'ปันผล', 'เด่น', 'แข็งแกร่ง', 'แนวรับ', 'ฟื้นตัว', 'รุ่ง', 'ยอดเยี่ยม'];
+            const negWords = ['down', 'drop', 'fall', 'lower', 'sell', 'bear', 'decline', 'plummet', 'sink', 'slide', 'miss', 'downgrade', 'underperform', 'loss', 'negative', 'weak', 'plunge', 'revolt', 'slump', 'bearish', 'cut', 'warning', 'low', 'pessimism', 'layoff', 'protest', 'ร่วง', 'ดิ่ง', 'ลบ', 'ขาดทุน', 'ลด', 'ลง', 'ขาย', 'ต่ำกว่าคาด', 'หดตัว', 'ชะลอ', 'กังวล', 'วิกฤต', 'ทรุด', 'เสี่ยง', 'ฉุด', 'แย่', 'ฟุบ', 'หนี้'];
 
             const newsItemsHtml = news.slice(0, 3).map(n => {
                 let itemScore = 0;
@@ -1156,21 +1249,21 @@ async function searchStockPrice() {
             recommendationColor = 'var(--accent-green)';
             const low = price * 0.97;
             const high = price * 0.99;
-            entryRangeHtml = `<strong>$${low.toFixed(2)} - $${high.toFixed(2)}</strong> <span style="color:var(--text-muted); font-weight:normal;">(ตั้งรับช่วงย่อตัว 1-3%)</span>`;
+            entryRangeHtml = `<strong>${currency}${low.toFixed(2)} - ${currency}${high.toFixed(2)}</strong> <span style="color:var(--text-muted); font-weight:normal;">(ตั้งรับช่วงย่อตัว 1-3%)</span>`;
         } else if (score < 0) {
             sentimentText = '🔴 เชิงลบ (Negative)';
             recommendationText = '🔴 หลีกเลี่ยง / ชะลอการลงทุน (Avoid / High Risk)';
             recommendationColor = 'var(--accent-red)';
             const low = price * 0.92;
             const high = price * 0.95;
-            entryRangeHtml = `<strong>$${low.toFixed(2)} - $${high.toFixed(2)}</strong> <span style="color:var(--text-muted); font-weight:normal;">(ตั้งรับส่วนลดลึก 5-8%)</span>`;
+            entryRangeHtml = `<strong>${currency}${low.toFixed(2)} - ${currency}${high.toFixed(2)}</strong> <span style="color:var(--text-muted); font-weight:normal;">(ตั้งรับส่วนลดลึก 5-8%)</span>`;
         } else {
             sentimentText = '⚪ ทั่วไป (Neutral)';
             recommendationText = '🟡 ทยอยสะสมเมื่อย่อตัว (Accumulate / Hold)';
             recommendationColor = 'var(--accent-yellow)';
             const low = price * 0.95;
             const high = price * 0.97;
-            entryRangeHtml = `<strong>$${low.toFixed(2)} - $${high.toFixed(2)}</strong> <span style="color:var(--text-muted); font-weight:normal;">(ตั้งรับช่วงย่อตัว 3-5%)</span>`;
+            entryRangeHtml = `<strong>${currency}${low.toFixed(2)} - ${currency}${high.toFixed(2)}</strong> <span style="color:var(--text-muted); font-weight:normal;">(ตั้งรับช่วงย่อตัว 3-5%)</span>`;
         }
 
         analysisContent.innerHTML = `
@@ -1189,9 +1282,24 @@ async function searchStockPrice() {
                     <span style="color:var(--text-primary); font-size:0.78rem;">${entryRangeHtml}</span>
                 </div>
                 
-                <div style="font-size:0.68rem; font-weight:600; color:var(--text-muted);">📰 หัวข้อข่าวสารล่าสุดและการประเมิน (+/-):</div>
-                ${newsListHtml}
+                <!-- Tabs for News vs Chart -->
+                <div style="display:flex; border-bottom:1px solid var(--border); margin-top:0.4rem; gap:0.5rem;">
+                    <button id="analysis-tab-news" class="btn" style="background:transparent; border:none; border-bottom:2px solid var(--accent-blue); border-radius:0; color:var(--accent-blue); padding:0.25rem 0.5rem; font-size:0.68rem; line-height:1;" onclick="switchAnalysisTab('news')">📰 ข่าวสารล่าสุด</button>
+                    <button id="analysis-tab-chart" class="btn" style="background:transparent; border:none; border-radius:0; color:var(--text-muted); padding:0.25rem 0.5rem; font-size:0.68rem; line-height:1;" onclick="switchAnalysisTab('chart')">📈 กราฟเทคนิค</button>
+                </div>
+                
+                <!-- Content Area -->
+                <div id="analysis-tab-content-news" style="display:${activeAnalysisTab==='news'?'block':'none'};">
+                    ${newsListHtml}
+                </div>
+                
+                <div id="analysis-tab-content-chart" style="display:${activeAnalysisTab==='chart'?'block':'none'}; margin-top:0.4rem;">
+                    <div id="tv-mini-chart" style="height:140px; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:#f8fafc;"></div>
+                </div>
             </div>`;
+            
+        // Render TradingView mini chart in background
+        renderMiniChart(symbol);
     } else {
         resultBox.innerHTML = `
             <div style="color:var(--accent-red); font-weight:600;">
