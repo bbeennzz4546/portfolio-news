@@ -670,7 +670,11 @@ let isFetching   = false;
 let isWidgetVisible = true;
 
 /* ══════════════════════════════════════════
-   FETCH NEWS (rss2json.com)
+   FETCH NEWS — 3-layer strategy:
+   1) Yahoo Finance via rss2json (US stocks)
+   2) Google News via rss2json (Thai + obscure stocks)
+   3) Last resort: CORS proxy + client-side XML parser
+   No AbortSignal used — max browser compatibility
 ══════════════════════════════════════════ */
 async function fetchXmlWithProxy(targetUrl) {
     const proxies = [
@@ -678,103 +682,99 @@ async function fetchXmlWithProxy(targetUrl) {
         url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
         url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
     ];
-
     for (const getProxyUrl of proxies) {
         try {
-            const proxyUrl = getProxyUrl(targetUrl);
-            const r = await fetch(proxyUrl);
+            const r = await fetch(getProxyUrl(targetUrl));
             if (r.ok) {
                 const text = await r.text();
                 if (text && (text.includes('<rss') || text.includes('<channel') || text.includes('<feed'))) {
                     return text;
                 }
             }
-        } catch (e) {
-            console.warn(`Proxy fetch failed for URL: ${targetUrl}`, e);
-        }
+        } catch (e) { /* try next proxy */ }
     }
-    throw new Error(`All proxies failed to fetch URL: ${targetUrl}`);
+    throw new Error('All proxies failed');
 }
 
 function parseRssXml(xmlText) {
     try {
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-        const parserError = xmlDoc.querySelector("parsererror");
-        if (parserError) {
-            console.error("XML parsing error", parserError.textContent);
-            return [];
-        }
-        return Array.from(xmlDoc.querySelectorAll("item")).map(item => {
-            const titleEl = item.querySelector("title");
-            const linkEl = item.querySelector("link");
-            const pubDateEl = item.querySelector("pubDate");
-            const sourceEl = item.querySelector("source");
-            const authorEl = item.querySelector("author");
-            
-            return {
-                title: titleEl ? titleEl.textContent.trim() : "",
-                link: linkEl ? linkEl.textContent.trim() : "#",
-                pubDate: pubDateEl ? pubDateEl.textContent.trim() : "",
-                source: sourceEl ? sourceEl.textContent.trim() : (authorEl ? authorEl.textContent.trim() : "")
-            };
-        });
-    } catch(e) {
-        console.error("Failed to parse RSS XML", e);
-        return [];
-    }
+        const doc = parser.parseFromString(xmlText, 'text/xml');
+        if (doc.querySelector('parsererror')) return [];
+        return Array.from(doc.querySelectorAll('item')).map(item => ({
+            title  : (item.querySelector('title')   || {}).textContent || '',
+            link   : (item.querySelector('link')    || {}).textContent || '#',
+            pubDate: (item.querySelector('pubDate') || {}).textContent || '',
+            source : (item.querySelector('source')  || item.querySelector('author') || {}).textContent || '',
+        }));
+    } catch(e) { return []; }
 }
 
 async function fetchTicker(symbol) {
     const isThai = symbol.endsWith('.BK');
-    const region = isThai ? 'TH&lang=th-TH' : 'US&lang=en-US';
-    
-    // 1. Prepare Yahoo RSS URL
-    const yahooRssUrl = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${symbol}&region=${region}`;
-    
-    let xmlText = '';
-    try {
-        xmlText = await fetchXmlWithProxy(yahooRssUrl);
-    } catch(e) {
-        console.warn(`[${symbol}] Yahoo Finance RSS fetch failed, trying Google News fallback`, e.message);
-    }
-    
-    let items = [];
-    if (xmlText) {
-        items = parseRssXml(xmlText);
-    }
-    
-    // 2. Fallback to Google News search if Yahoo returns no articles or failed
-    if (items.length === 0) {
+    const region  = isThai ? 'TH&lang=th-TH' : 'US&lang=en-US';
+
+    /* safe fetch — no AbortSignal so older browsers/webviews don't crash */
+    const safeFetchJson = async (url) => {
         try {
-            const query = isThai 
-                ? encodeURIComponent(`${symbol.replace('.BK','')} หุ้น`)
-                : encodeURIComponent(`${symbol} stock`);
-            const gl = isThai ? 'TH' : 'US';
-            const hl = isThai ? 'th' : 'en';
-            const ceid = isThai ? 'TH:th' : 'US:en';
-            const googleRssUrl = `https://news.google.com/rss/search?q=${query}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
-            
-            const googleXmlText = await fetchXmlWithProxy(googleRssUrl);
-            if (googleXmlText) {
-                items = parseRssXml(googleXmlText);
-            }
-        } catch(e2) {
-            console.warn(`[${symbol}] Google News fallback failed`, e2.message);
+            const r = await fetch(url);
+            if (r.ok) return await r.json();
+        } catch(e) {}
+        return null;
+    };
+
+    let items = [];
+
+    /* ── 1. Yahoo Finance RSS via rss2json (great for US stocks) ── */
+    const yahooRss = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${symbol}&region=${region}`;
+    const yahooData = await safeFetchJson(
+        `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(yahooRss)}&count=10`
+    );
+    if (yahooData?.status === 'ok' && yahooData.items?.length > 0) {
+        items = yahooData.items;
+    }
+
+    /* ── 2. Google News RSS via rss2json (Thai stocks + small caps) ── */
+    if (items.length === 0) {
+        const rawQ = isThai ? `${symbol.replace('.BK','')} หุ้น` : `${symbol} stock news`;
+        const gl   = isThai ? 'TH' : 'US';
+        const hl   = isThai ? 'th' : 'en';
+        const ceid = isThai ? 'TH:th' : 'US:en';
+        const gRss = `https://news.google.com/rss/search?q=${encodeURIComponent(rawQ)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
+        const gData = await safeFetchJson(
+            `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(gRss)}&count=10`
+        );
+        if (gData?.status === 'ok' && gData.items?.length > 0) {
+            items = gData.items;
         }
     }
-    
-    // If we got items, map them, otherwise return empty array
+
+    /* ── 3. Last resort: CORS proxy + client-side XML parser ── */
+    if (items.length === 0) {
+        try {
+            const rawQ = isThai ? `${symbol.replace('.BK','')} หุ้น` : `${symbol} stock`;
+            const gl   = isThai ? 'TH' : 'US';
+            const hl   = isThai ? 'th' : 'en';
+            const ceid = isThai ? 'TH:th' : 'US:en';
+            const gRss = `https://news.google.com/rss/search?q=${encodeURIComponent(rawQ)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
+            const xml  = await fetchXmlWithProxy(gRss);
+            if (xml) {
+                items = parseRssXml(xml).map(p => ({
+                    title: p.title, link: p.link, author: p.source, pubDate: p.pubDate,
+                }));
+            }
+        } catch(e) { console.warn(`[${symbol}] All news sources exhausted`); }
+    }
+
     if (items.length > 0) {
         return items.slice(0, MAX_NEWS).map(item => ({
-            title  : item.title   || '',
-            link   : item.link    || '#',
-            source : cleanSource(item.source || item.author || item.link),
+            title  : item.title || '',
+            link   : item.link  || '#',
+            source : cleanSource(item.author || (item.source?.title) || item.link),
             pubDate: item.pubDate ? new Date(item.pubDate) : null,
         }));
     }
-    
-    return []; // Return empty list instead of null so dashboard doesn't show loading errors
+    return [];
 }
 
 function cleanSource(s) {
