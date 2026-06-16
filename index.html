@@ -9,21 +9,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary:    #080e1a;
-            --bg-secondary:  #0d1527;
-            --bg-card:       #0f1a2e;
-            --bg-card-hover: #162036;
-            --accent-blue:   #3b82f6;
-            --accent-green:  #10b981;
-            --accent-red:    #ef4444;
-            --accent-yellow: #f59e0b;
-            --accent-purple: #8b5cf6;
-            --accent-cyan:   #06b6d4;
-            --text-primary:  #f1f5f9;
-            --text-secondary:#94a3b8;
-            --text-muted:    #475569;
-            --border:        #1e2d45;
-            --border-bright: #2a3f5f;
+            --bg-primary:    #f8fafc; /* Slate 50 */
+            --bg-secondary:  #ffffff;
+            --bg-card:       #ffffff;
+            --bg-card-hover: #f1f5f9; /* Slate 100 */
+            --accent-blue:   #2563eb; /* Premium Blue */
+            --accent-green:  #059669; /* Emerald Green */
+            --accent-red:    #dc2626; /* Rose Red */
+            --accent-yellow: #d97706; /* Amber Gold */
+            --accent-purple: #7c3aed;
+            --accent-cyan:   #0891b2;
+            --text-primary:  #0f172a; /* Slate 900 */
+            --text-secondary:#475569; /* Slate 600 */
+            --text-muted:    #64748b; /* Slate 500 */
+            --border:        #e2e8f0; /* Slate 200 */
+            --border-bright: #cbd5e1; /* Slate 300 */
         }
 
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -37,7 +37,7 @@
 
         /* ── HEADER ── */
         .header {
-            background: linear-gradient(180deg, #0d1527 0%, #080e1a 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
             border-bottom: 1px solid var(--border);
             padding: 0.85rem 1.75rem;
             display: flex;
@@ -49,18 +49,19 @@
             backdrop-filter: blur(12px);
             gap: 1rem;
             flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
 
         .header-left { display:flex; align-items:center; gap:0.9rem; }
 
         .logo {
             width: 40px; height: 40px;
-            background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.15rem;
             flex-shrink: 0;
-            box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.15);
         }
 
         .header-title { font-size:1.05rem; font-weight:700; letter-spacing:-0.02em; }
@@ -74,9 +75,9 @@
             border-radius: 20px;
             font-size: 0.7rem; font-weight: 600;
         }
-        .status-pill.open  { background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.3); color:#34d399; }
-        .status-pill.closed{ background:rgba(100,116,139,.12); border:1px solid rgba(100,116,139,.3); color:#94a3b8; }
-        .status-pill.weekend{background:rgba(245,158,11,.12);  border:1px solid rgba(245,158,11,.3);  color:#fbbf24; }
+        .status-pill.open  { background:rgba(5,150,105,.08); border:1px solid rgba(5,150,105,.2); color:#059669; }
+        .status-pill.closed{ background:rgba(100,116,139,.08); border:1px solid rgba(100,116,139,.2); color:#64748b; }
+        .status-pill.weekend{background:rgba(217,119,6,.08);  border:1px solid rgba(217,119,6,.2);  color:#d97706; }
 
         .dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
         .dot.blink { animation:blink 1.8s infinite; }
@@ -92,10 +93,10 @@
             display: flex; align-items: center; gap: 0.4rem;
             white-space: nowrap;
         }
-        .btn-primary { background: var(--accent-blue); color: #fff; box-shadow:0 2px 8px rgba(59,130,246,.35); }
-        .btn-primary:hover { background: #2563eb; transform:translateY(-1px); }
-        .btn-ghost  { background: transparent; border:1px solid var(--border-bright); color:var(--text-secondary); }
-        .btn-ghost:hover { border-color:var(--accent-blue); color:var(--accent-blue); }
+        .btn-primary { background: var(--accent-blue); color: #fff; box-shadow:0 2px 6px rgba(37,99,235,.2); }
+        .btn-primary:hover { background: #1d4ed8; transform:translateY(-1px); }
+        .btn-ghost  { background: #ffffff; border:1px solid var(--border-bright); color:var(--text-secondary); }
+        .btn-ghost:hover { border-color:var(--accent-blue); color:var(--accent-blue); background:#f0f6ff; }
         .btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
 
         @keyframes spin { to { transform:rotate(360deg); } }
@@ -113,7 +114,7 @@
         .stats-bar {
             padding: 0.6rem 1.75rem;
             display: flex; align-items: center; gap: 1.5rem;
-            background: rgba(13,21,39,.7);
+            background: rgba(255,255,255,.9);
             border-bottom: 1px solid var(--border);
             flex-wrap: wrap;
             font-size: 0.72rem;
@@ -148,12 +149,12 @@
         .chip:hover { transform: translateY(-1px); }
         .chip.active { box-shadow: 0 0 0 2px currentColor; }
 
-        .chip-all      { background:rgba(59,130,246,.15);  color:#60a5fa; border-color:rgba(59,130,246,.3); }
-        .chip-tech     { background:rgba(99,102,241,.15);  color:#a5b4fc; border-color:rgba(99,102,241,.3); }
-        .chip-finance  { background:rgba(16,185,129,.15);  color:#6ee7b7; border-color:rgba(16,185,129,.3); }
-        .chip-energy   { background:rgba(245,158,11,.15);  color:#fcd34d; border-color:rgba(245,158,11,.3); }
-        .chip-etf      { background:rgba(139,92,246,.15);  color:#c4b5fd; border-color:rgba(139,92,246,.3); }
-        .chip-commodity{ background:rgba(251,191,36,.15);  color:#fde68a; border-color:rgba(251,191,36,.3); }
+        .chip-all      { background:rgba(37,99,235,.08);  color:#2563eb; border-color:rgba(37,99,235,.2); }
+        .chip-tech     { background:rgba(124,58,237,.08);  color:#7c3aed; border-color:rgba(124,58,237,.2); }
+        .chip-finance  { background:rgba(5,150,105,.08);  color:#059669; border-color:rgba(5,150,105,.2); }
+        .chip-energy   { background:rgba(217,119,6,.08);  color:#d97706; border-color:rgba(217,119,6,.2); }
+        .chip-etf      { background:rgba(109,40,217,.08);  color:#6d28d9; border-color:rgba(109,40,217,.2); }
+        .chip-commodity{ background:rgba(180,83,9,.08);   color:#b45309; border-color:rgba(180,83,9,.2); }
 
         /* ── GRID ── */
         .grid {
@@ -169,11 +170,12 @@
             border: 1px solid var(--border);
             border-radius: 14px;
             overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
             transition: border-color .2s, box-shadow .2s, transform .2s;
         }
         .card:hover {
             border-color: var(--border-bright);
-            box-shadow: 0 8px 32px rgba(0,0,0,.4);
+            box-shadow: 0 10px 20px rgba(0,0,0,.04);
             transform: translateY(-2px);
         }
 
@@ -202,17 +204,28 @@
             border-radius: 5px;
         }
 
+        /* Delete Button */
+        .delete-btn {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 0.72rem; line-height: 1;
+            padding: 0.15rem 0.3rem; border-radius: 4px;
+            transition: all 0.15s;
+        }
+        .delete-btn:hover {
+            color: var(--accent-red); background: rgba(220,38,38, 0.08);
+        }
+
         /* ── NEWS LIST ── */
         .news-list { padding: 0.35rem 0; }
 
         .news-item {
             padding: 0.55rem 1.15rem;
-            border-bottom: 1px solid rgba(30,45,69,.5);
+            border-bottom: 1px solid #f1f5f9;
             text-decoration: none; display: block;
             transition: background .15s;
         }
         .news-item:last-child { border-bottom: none; }
-        .news-item:hover { background: rgba(59,130,246,.06); }
+        .news-item:hover { background: rgba(37,99,235,.04); }
 
         .news-title {
             font-size: .78rem;
@@ -233,7 +246,7 @@
 
         /* ── SKELETON ── */
         .skeleton {
-            background: linear-gradient(90deg, #1a2840 25%, #243355 50%, #1a2840 75%);
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
             background-size: 200% 100%;
             animation: shimmer 1.6s infinite;
             border-radius: 4px;
@@ -259,20 +272,22 @@
         .modal-overlay {
             display: none;
             position: fixed; inset:0;
-            background: rgba(0,0,0,.75);
+            background: rgba(15, 23, 42, 0.4);
             z-index: 300;
             align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
         }
         .modal-overlay.open { display:flex; }
 
         .modal {
-            background: #0f1a2e;
+            background: #ffffff;
             border: 1px solid var(--border-bright);
             border-radius: 16px;
             padding: 1.5rem;
             width: 90%; max-width: 480px;
-            max-height: 80vh; overflow-y: auto;
-            box-shadow: 0 24px 60px rgba(0,0,0,.6);
+            max-height: 85vh; overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.03);
+            color: var(--text-primary);
         }
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -289,8 +304,8 @@
 
         textarea.ticker-textarea {
             width: 100%;
-            height: 200px;
-            background: #080e1a;
+            height: 160px;
+            background: #f8fafc;
             border: 1px solid var(--border-bright);
             border-radius: 8px;
             padding: .7rem;
@@ -316,11 +331,11 @@
         /* ── TOAST ── */
         .toast {
             position: fixed; bottom:1.5rem; right:1.5rem;
-            background: #1e2d45; border:1px solid var(--border-bright);
+            background: #ffffff; border:1px solid var(--border-bright);
             padding: .65rem 1rem; border-radius:10px;
-            font-size:.75rem; font-weight:500;
+            font-size:.75rem; font-weight:600;
             color: var(--text-primary);
-            box-shadow: 0 8px 24px rgba(0,0,0,.4);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
             transform: translateY(80px); opacity:0;
             transition: all .3s cubic-bezier(.34,1.56,.64,1);
             z-index: 400;
@@ -345,8 +360,9 @@
             <span class="dot" id="marketDot"></span>
             <span id="marketText">ตรวจสอบ...</span>
         </div>
-        <button class="btn btn-ghost" onclick="openSettings()">⚙️ จัดการ Tickers</button>
-        <button class="btn btn-primary" id="refreshBtn" onclick="manualRefresh()">
+        <button class="btn btn-primary" onclick="openAddTicker()">➕ เพิ่มหุ้น</button>
+        <button class="btn btn-ghost" onclick="openSettings()">⚙️ ตั้งค่า & Tickers</button>
+        <button class="btn btn-ghost" id="refreshBtn" onclick="manualRefresh()">
             <span id="refreshIcon">🔄</span>&nbsp;รีเฟรชข่าว
         </button>
     </div>
@@ -373,10 +389,25 @@
     </div>
     <div class="stat-divider"></div>
     <div class="stat">
-        <span class="stat-label">แหล่งข่าว:</span>
-        <span class="stat-val">Yahoo Finance RSS</span>
+        <span class="stat-label">แหล่งข้อมูล:</span>
+        <span class="stat-val">Yahoo & TradingView</span>
     </div>
 </div>
+
+<!-- ═══ REAL-TIME PRICE WIDGET ═══ -->
+<section class="widget-section" style="padding: 0 1.75rem 0.5rem; margin-top: 1rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <h3 style="font-size:0.85rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
+            📈 สรุปราคาสด Real-time (TradingView Quotes)
+        </h3>
+        <button class="btn btn-ghost" style="padding: 0.2rem 0.5rem; font-size:0.65rem;" onclick="toggleWidget()">
+            <span id="toggleWidgetText">🙈 ซ่อนตาราง</span>
+        </button>
+    </div>
+    <div id="tradingview-wrapper" style="height: 320px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #ffffff;">
+        <div id="tradingview-widget" style="height: 100%;"></div>
+    </div>
+</section>
 
 <!-- ═══ TOOLBAR ═══ -->
 <div class="toolbar">
@@ -396,19 +427,87 @@
 
 <!-- ═══ SETTINGS MODAL ═══ -->
 <div class="modal-overlay" id="settingsModal">
-    <div class="modal">
+    <div class="modal" style="max-width: 520px;">
         <div class="modal-header">
-            <span class="modal-title">⚙️ จัดการ Portfolio Tickers</span>
+            <span class="modal-title">⚙️ ตั้งค่าแดชบอร์ด</span>
             <button class="modal-close" onclick="closeSettings()">✕</button>
         </div>
-        <p class="modal-note">
-            พิมพ์ Ticker หนึ่งบรรทัดต่อหนึ่งตัว (ตัวพิมพ์ใหญ่/เล็กได้)<br>
-            ระบบจะดึงข่าวจาก Yahoo Finance RSS อัตโนมัติ
-        </p>
-        <textarea class="ticker-textarea" id="tickerTextarea" spellcheck="false"></textarea>
-        <div class="modal-actions">
-            <button class="btn btn-primary"  onclick="saveSettings()">💾 บันทึกและรีเฟรช</button>
-            <button class="btn btn-ghost"    onclick="closeSettings()">ยกเลิก</button>
+        
+        <!-- Tab Headers -->
+        <div style="display:flex; border-bottom:1px solid var(--border); margin-bottom:1rem; gap: 0.5rem;">
+            <button id="tab-tickers-btn" class="btn" style="background:transparent; border:none; border-bottom:2px solid var(--accent-blue); border-radius:0; color:var(--accent-blue); padding:0.5rem 1rem; font-size:0.75rem;" onclick="switchTab('tickers')">รายชื่อ Tickers</button>
+            <button id="tab-github-btn" class="btn" style="background:transparent; border:none; border-radius:0; color:var(--text-muted); padding:0.5rem 1rem; font-size:0.75rem;" onclick="switchTab('github')">ซิงค์ GitHub (ทุกเครื่อง)</button>
+        </div>
+
+        <!-- Tickers Tab -->
+        <div id="tab-tickers">
+            <p class="modal-note">
+                พิมพ์สัญลักษณ์ย่อหุ้น (Ticker) หนึ่งตัวต่อหนึ่งบรรทัด<br>
+                ระบบจะโหลดข่าวใหม่อัตโนมัติ
+            </p>
+            <textarea class="ticker-textarea" id="tickerTextarea" spellcheck="false"></textarea>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="saveSettings()">💾 บันทึกรายชื่อ</button>
+                <button class="btn btn-ghost" onclick="closeSettings()">ยกเลิก</button>
+            </div>
+        </div>
+
+        <!-- GitHub Tab -->
+        <div id="tab-github" style="display:none;">
+            <p class="modal-note" style="color:var(--text-secondary); margin-bottom:1rem; line-height:1.45;">
+                เปิดใช้ฟีเจอร์นี้เพื่อซิงค์ข้อมูลหุ้นระหว่างเครื่องคอมพิวเตอร์และมือถือโดยอัตโนมัติ โดยจะเก็บไฟล์ไว้ใน GitHub ในชื่อไฟล์ <code>portfolio.json</code>
+            </p>
+            <div style="display:flex; flex-direction:column; gap:0.8rem; margin-bottom:1rem;">
+                <div>
+                    <label style="font-size:0.72rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.2rem;">GitHub Personal Access Token (PAT)</label>
+                    <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxx" style="width:100%; padding:0.45rem; border:1px solid var(--border-bright); border-radius:6px; font-size:0.78rem;">
+                    <small style="color:var(--text-muted); font-size:0.6rem; display:block; margin-top:2px;">
+                        สร้าง Token ได้ในหน้าเว็บ GitHub -> Settings -> Developer settings -> Tokens (classic) ติ๊กถูกที่ช่อง <code>repo</code>
+                    </small>
+                </div>
+                <div>
+                    <label style="font-size:0.72rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.2rem;">GitHub Repository Path</label>
+                    <input type="text" id="ghRepo" placeholder="เช่น bbeennzz4546/portfolio-news" style="width:100%; padding:0.45rem; border:1px solid var(--border-bright); border-radius:6px; font-size:0.78rem;">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="saveGitHubSettings()">💾 บันทึกการเชื่อมต่อ</button>
+                <button class="btn btn-ghost" onclick="closeSettings()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ ADD TICKER MODAL ═══ -->
+<div class="modal-overlay" id="addTickerModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">➕ เพิ่มหุ้นใหม่ในพอร์ต</span>
+            <button class="modal-close" onclick="closeAddTicker()">✕</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:0.9rem;">
+            <div>
+                <label style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.3rem;">สัญลักษณ์ย่อหุ้น (Ticker Symbol) *</label>
+                <input type="text" id="addSymbol" placeholder="เช่น AAPL, TSLA, BTC-USD" style="width:100%; padding:0.5rem; border:1px solid var(--border-bright); border-radius:6px; font-size:0.8rem; outline:none; font-weight:600; text-transform:uppercase;">
+            </div>
+            <div>
+                <label style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.3rem;">ชื่อบริษัท (Company Name) - ไม่บังคับ</label>
+                <input type="text" id="addName" placeholder="เช่น Apple Inc. (เว้นไว้จะเป็นชื่อเดียวกับสัญลักษณ์)" style="width:100%; padding:0.5rem; border:1px solid var(--border-bright); border-radius:6px; font-size:0.8rem; outline:none;">
+            </div>
+            <div>
+                <label style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.3rem;">หมวดหมู่ (Sector)</label>
+                <select id="addSector" style="width:100%; padding:0.5rem; border:1px solid var(--border-bright); border-radius:6px; font-size:0.8rem; outline:none; background:#fff;">
+                    <option value="tech">💻 Tech/AI</option>
+                    <option value="finance">🏦 Finance</option>
+                    <option value="energy">⚡ Energy/Nuclear</option>
+                    <option value="etf">📦 ETF</option>
+                    <option value="commodity">🥇 Commodity</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="submitAddTicker()">💾 เพิ่มหุ้นลงพอร์ต</button>
+                <button class="btn btn-ghost" onclick="closeAddTicker()">ยกเลิก</button>
+            </div>
         </div>
     </div>
 </div>
@@ -418,25 +517,26 @@
 
 <script>
 /* ══════════════════════════════════════════
-   CONFIGURATION — แก้ไข Portfolio ตรงนี้
+   CONFIGURATION — รายชื่อเริ่มต้น (Fallback)
+   ดึงข้อมูลผ่าน API อัตโนมัติ
+   และบันทึกลงใน localStorage หรือ GitHub (portfolio.json)
 ══════════════════════════════════════════ */
 const PORTFOLIO = [
-    { symbol:'META',  name:'Meta Platforms',           sector:'tech',      color:'#3b82f6' },
+    { symbol:'META',  name:'Meta Platforms',           sector:'tech',      color:'#2563eb' },
     { symbol:'MSFT',  name:'Microsoft Corporation',    sector:'tech',      color:'#0ea5e9' },
-    { symbol:'NVDA',  name:'NVIDIA Corporation',       sector:'tech',      color:'#76b900' },
-    { symbol:'AMZN',  name:'Amazon.com',               sector:'tech',      color:'#f97316' },
+    { symbol:'NVDA',  name:'NVIDIA Corporation',       sector:'tech',      color:'#059669' },
+    { symbol:'AMZN',  name:'Amazon.com',               sector:'tech',      color:'#ea580c' },
     { symbol:'ANET',  name:'Arista Networks',          sector:'tech',      color:'#6366f1' },
-    { symbol:'CRWV',  name:'CoreWeave Inc.',           sector:'tech',      color:'#8b5cf6' },
-    { symbol:'VRT',   name:'Vertiv Holdings Co.',      sector:'tech',      color:'#22d3ee' },
-    { symbol:'MOD',   name:'Modine Manufacturing',     sector:'tech',      color:'#60a5fa' },
+    { symbol:'VRT',   name:'Vertiv Holdings Co.',      sector:'tech',      color:'#06b6d4' },
+    { symbol:'MOD',   name:'Modine Manufacturing',     sector:'tech',      color:'#3b82f6' },
     { symbol:'JPM',   name:'JPMorgan Chase & Co.',     sector:'finance',   color:'#10b981' },
     { symbol:'BAC',   name:'Bank of America',          sector:'finance',   color:'#34d399' },
-    { symbol:'CEG',   name:'Constellation Energy',     sector:'energy',    color:'#f59e0b' },
-    { symbol:'CCJ',   name:'Cameco Corporation',       sector:'energy',    color:'#d97706' },
-    { symbol:'QQQI',  name:'NEOS Nasdaq-100 Hi-Inc.',  sector:'etf',       color:'#a78bfa' },
-    { symbol:'JEPQ',  name:'JPM Nasdaq Prem. Income',  sector:'etf',       color:'#818cf8' },
-    { symbol:'GLD',   name:'SPDR Gold Shares',         sector:'commodity', color:'#fbbf24' },
-    { symbol:'SGOV',  name:'iShares 0-3M Treasury',   sector:'etf',       color:'#94a3b8' },
+    { symbol:'CEG',   name:'Constellation Energy',     sector:'energy',    color:'#d97706' },
+    { symbol:'CCJ',   name:'Cameco Corporation',       sector:'energy',    color:'#b45309' },
+    { symbol:'QQQI',  name:'NEOS Nasdaq-100 Hi-Inc.',  sector:'etf',       color:'#8b5cf6' },
+    { symbol:'JEPQ',  name:'JPM Nasdaq Prem. Income',  sector:'etf',       color:'#4f46e5' },
+    { symbol:'GLD',   name:'SPDR Gold Shares',         sector:'commodity', color:'#d97706' },
+    { symbol:'SGOV',  name:'iShares 0-3M Treasury',   sector:'etf',       color:'#64748b' },
 ];
 
 const SECTOR_LABEL = {
@@ -448,23 +548,24 @@ const SECTOR_CLASS = {
     energy:'chip-energy', etf:'chip-etf', commodity:'chip-commodity'
 };
 const BADGE_STYLE = {
-    tech:     'background:rgba(99,102,241,.2); color:#a5b4fc;',
-    finance:  'background:rgba(16,185,129,.2); color:#6ee7b7;',
-    energy:   'background:rgba(245,158,11,.2); color:#fcd34d;',
-    etf:      'background:rgba(139,92,246,.2); color:#c4b5fd;',
-    commodity:'background:rgba(251,191,36,.2); color:#fde68a;',
+    tech:     'background:rgba(124,58,237,.1); color:#7c3aed;',
+    finance:  'background:rgba(5,150,105,.1); color:#059669;',
+    energy:   'background:rgba(217,119,6,.1); color:#d97706;',
+    etf:      'background:rgba(109,40,217,.1); color:#6d28d9;',
+    commodity:'background:rgba(180,83,9,.1); color:#b45309;',
 };
 const MAX_NEWS = 5;   // ข่าวต่อตัว
 const CONCURRENCY = 3; // เรียก API พร้อมกันสูงสุดกี่ตัว
 
 /* ══ State ══ */
-let tickers      = [...PORTFOLIO];
+let tickers      = [];
 let cache        = {};   // { SYMBOL: [{title,link,source,pubDate}] | null }
 let currentFilter = 'all';
 let isFetching   = false;
+let isWidgetVisible = true;
 
 /* ══════════════════════════════════════════
-   FETCH NEWS
+   FETCH NEWS (rss2json.com)
 ══════════════════════════════════════════ */
 async function fetchTicker(symbol) {
     const rss = encodeURIComponent(
@@ -534,7 +635,7 @@ async function fetchAll(forceRefresh=false) {
 }
 
 /* ══════════════════════════════════════════
-   RENDER
+   RENDER GRID & CARDS
 ══════════════════════════════════════════ */
 function renderGrid() {
     const filtered = currentFilter==='all'
@@ -581,12 +682,15 @@ function cardHTML(t) {
     <article class="card" id="card-${t.symbol}">
         <div class="card-head">
             <div class="ticker-row">
-                <div class="ticker-icon" style="background:linear-gradient(135deg,${t.color}22,${t.color}44);
-                     border:1.5px solid ${t.color}55; color:${t.color}; font-size:.58rem;">
+                <div class="ticker-icon" style="background:linear-gradient(135deg,${t.color}15,${t.color}30);
+                     border:1.5px solid ${t.color}44; color:${t.color}; font-size:.58rem;">
                     ${esc(t.symbol)}
                 </div>
                 <div>
-                    <div class="ticker-sym">${esc(t.symbol)}</div>
+                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                        <span class="ticker-sym">${esc(t.symbol)}</span>
+                        <button class="delete-btn" onclick="removeTicker('${esc(t.symbol)}')" title="ลบหุ้นตัวนี้">✕</button>
+                    </div>
                     <div class="ticker-name">${esc(t.name)}</div>
                 </div>
             </div>
@@ -623,29 +727,279 @@ function setFilter(sector) {
 }
 
 /* ══════════════════════════════════════════
-   SETTINGS
+   TRADINGVIEW PRICE TABLE WIDGET
+══════════════════════════════════════════ */
+function mapToTradingView(sym) {
+    const mappings = {
+        META: 'NASDAQ:META',
+        MSFT: 'NASDAQ:MSFT',
+        NVDA: 'NASDAQ:NVDA',
+        AMZN: 'NASDAQ:AMZN',
+        ANET: 'NYSE:ANET',
+        VRT: 'NYSE:VRT',
+        MOD: 'NYSE:MOD',
+        JPM: 'NYSE:JPM',
+        BAC: 'NYSE:BAC',
+        CEG: 'NASDAQ:CEG',
+        CCJ: 'NYSE:CCJ',
+        QQQI: 'NASDAQ:QQQI',
+        JEPQ: 'NASDAQ:JEPQ',
+        GLD: 'AMEX:GLD',
+        SGOV: 'AMEX:SGOV'
+    };
+    if (mappings[sym]) return mappings[sym];
+    if (sym.endsWith('-USD')) return 'BINANCE:' + sym.replace('-USD', 'USDT');
+    return sym;
+}
+
+function renderTradingViewWidget() {
+    if (!isWidgetVisible) return;
+    const container = document.getElementById('tradingview-widget');
+    if (!container) return;
+
+    container.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%"></div>';
+
+    const tvSymbols = tickers.map(t => ({ name: mapToTradingView(t.symbol) }));
+
+    const config = {
+        "width": "100%",
+        "height": "100%",
+        "symbolsGroups": [
+            {
+                "name": "รายชื่อหุ้นในพอร์ตของคุณ",
+                "symbols": tvSymbols
+            }
+        ],
+        "showSymbolLogo": true,
+        "colorTheme": "light",
+        "isTransparent": false,
+        "locale": "th"
+    };
+
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js';
+    script.async = true;
+    script.text = JSON.stringify(config);
+    container.appendChild(script);
+}
+
+function toggleWidget() {
+    isWidgetVisible = !isWidgetVisible;
+    const wrapper = document.getElementById('tradingview-wrapper');
+    const text = document.getElementById('toggleWidgetText');
+    if (isWidgetVisible) {
+        wrapper.style.display = 'block';
+        text.textContent = '🙈 ซ่อนตาราง';
+        renderTradingViewWidget();
+    } else {
+        wrapper.style.display = 'none';
+        text.textContent = '👀 แสดงตาราง';
+    }
+}
+
+/* ══════════════════════════════════════════
+   INTERACTIVE ADD/DELETE TICKERS
+══════════════════════════════════════════ */
+function openAddTicker() {
+    document.getElementById('addSymbol').value = '';
+    document.getElementById('addName').value = '';
+    document.getElementById('addTickerModal').classList.add('open');
+}
+
+function closeAddTicker() {
+    document.getElementById('addTickerModal').classList.remove('open');
+}
+
+function getRandomColor() {
+    const colors = ['#2563eb', '#0ea5e9', '#059669', '#ea580c', '#6366f1', '#06b6d4', '#7c3aed', '#b45309'];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+async function submitAddTicker() {
+    const sym = document.getElementById('addSymbol').value.trim().toUpperCase();
+    const name = document.getElementById('addName').value.trim() || sym;
+    const sector = document.getElementById('addSector').value;
+
+    if (!sym) { alert('กรุณาระบุสัญลักษณ์หุ้น'); return; }
+    if (sym.length > 8) { alert('สัญลักษณ์หุ้นยาวเกินไป'); return; }
+
+    if (tickers.some(t => t.symbol === sym)) {
+        alert('มีหุ้นตัวนี้อยู่ในพอร์ตแล้ว');
+        return;
+    }
+
+    const newTicker = {
+        symbol: sym,
+        name: name,
+        sector: sector,
+        color: getRandomColor()
+    };
+
+    tickers.push(newTicker);
+    closeAddTicker();
+    await saveAndSync();
+}
+
+async function removeTicker(symbol) {
+    if (confirm(`คุณต้องการลบหุ้น ${symbol} ออกจากพอร์ตใช่หรือไม่?`)) {
+        tickers = tickers.filter(t => t.symbol !== symbol);
+        await saveAndSync();
+    }
+}
+
+async function saveAndSync() {
+    localStorage.setItem('pnws_tickers', JSON.stringify(tickers));
+    renderGrid();
+    renderTradingViewWidget();
+    await syncToGitHub(tickers);
+    await fetchAll();
+}
+
+/* ══════════════════════════════════════════
+   MODAL TABS & SETTINGS
 ══════════════════════════════════════════ */
 function openSettings() {
     document.getElementById('tickerTextarea').value = tickers.map(t=>t.symbol).join('\n');
+    document.getElementById('ghToken').value = localStorage.getItem('pnws_github_token') || '';
+    document.getElementById('ghRepo').value = localStorage.getItem('pnws_github_repo') || '';
     document.getElementById('settingsModal').classList.add('open');
+    switchTab('tickers');
 }
+
 function closeSettings() {
     document.getElementById('settingsModal').classList.remove('open');
 }
-function saveSettings() {
+
+function switchTab(tab) {
+    const tickersTab = document.getElementById('tab-tickers');
+    const githubTab = document.getElementById('tab-github');
+    const tickersBtn = document.getElementById('tab-tickers-btn');
+    const githubBtn = document.getElementById('tab-github-btn');
+
+    if (tab === 'tickers') {
+        tickersTab.style.display = 'block';
+        githubTab.style.display = 'none';
+        tickersBtn.style.borderBottom = '2px solid var(--accent-blue)';
+        tickersBtn.style.color = 'var(--accent-blue)';
+        githubBtn.style.borderBottom = 'none';
+        githubBtn.style.color = 'var(--text-muted)';
+    } else {
+        tickersTab.style.display = 'none';
+        githubTab.style.display = 'block';
+        tickersBtn.style.borderBottom = 'none';
+        tickersBtn.style.color = 'var(--text-muted)';
+        githubBtn.style.borderBottom = '2px solid var(--accent-blue)';
+        githubBtn.style.color = 'var(--accent-blue)';
+    }
+}
+
+async function saveSettings() {
     const raw = document.getElementById('tickerTextarea').value;
     const syms = [...new Set(
-        raw.split('\n').map(s=>s.trim().toUpperCase()).filter(s=>s&&s.length<=6)
+        raw.split('\n').map(s=>s.trim().toUpperCase()).filter(s=>s&&s.length<=8)
     )];
     if (!syms.length) { alert('ใส่ Ticker อย่างน้อย 1 ตัว'); return; }
 
     tickers = syms.map(sym => {
         const found = PORTFOLIO.find(p=>p.symbol===sym) || tickers.find(p=>p.symbol===sym);
-        return found || { symbol:sym, name:sym, sector:'tech', color:'#3b82f6' };
+        return found || { symbol:sym, name:sym, sector:'tech', color:getRandomColor() };
     });
     cache = {};
     closeSettings();
-    fetchAll(true);
+    await saveAndSync();
+}
+
+function saveGitHubSettings() {
+    const token = document.getElementById('ghToken').value.trim();
+    const repo = document.getElementById('ghRepo').value.trim();
+
+    localStorage.setItem('pnws_github_token', token);
+    localStorage.setItem('pnws_github_repo', repo);
+
+    toast('💾 บันทึกการเชื่อมต่อ GitHub แล้ว!');
+    closeSettings();
+}
+
+/* ══════════════════════════════════════════
+   GITHUB AUTO-SYNC VIA PORTFOLIO.JSON
+══════════════════════════════════════════ */
+async function syncToGitHub(newTickers) {
+    const token = localStorage.getItem('pnws_github_token');
+    const repo = localStorage.getItem('pnws_github_repo');
+    if (!token || !repo) return;
+
+    const url = `https://api.github.com/repos/${repo}/contents/portfolio.json`;
+    const headers = {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+    };
+
+    try {
+        let sha = null;
+        try {
+            const r = await fetch(url, { headers });
+            if (r.ok) {
+                const d = await r.json();
+                sha = d.sha;
+            }
+        } catch(e) {}
+
+        const contentStr = JSON.stringify(newTickers, null, 2);
+        const base64Content = btoa(unescape(encodeURIComponent(contentStr)));
+        
+        const body = {
+            message: 'Update portfolio.json from Web UI',
+            content: base64Content
+        };
+        if (sha) body.sha = sha;
+
+        const rCommit = await fetch(url, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(body)
+        });
+
+        if (rCommit.ok) {
+            toast('💾 ซิงค์การตั้งค่าขึ้น GitHub เรียบร้อยแล้ว!');
+        } else {
+            const err = await rCommit.json();
+            toast('❌ อัปโหลด GitHub ล้มเหลว: ' + (err.message || 'Error'));
+        }
+    } catch(e) {
+        console.error(e);
+        toast('❌ เชื่อมต่อ GitHub ล้มเหลว');
+    }
+}
+
+async function initTickers() {
+    // 1. Try loading from portfolio.json (sync across devices)
+    try {
+        const r = await fetch('./portfolio.json?nocache=' + Date.now());
+        if (r.ok) {
+            const data = await r.json();
+            if (Array.isArray(data) && data.length > 0) {
+                tickers = data;
+                localStorage.setItem('pnws_tickers', JSON.stringify(tickers));
+                return;
+            }
+        }
+    } catch(e) {
+        console.warn('Cannot load portfolio.json, checking localStorage');
+    }
+
+    // 2. Try loading from localStorage
+    const saved = localStorage.getItem('pnws_tickers');
+    if (saved) {
+        try {
+            tickers = JSON.parse(saved);
+            return;
+        } catch(e) {}
+    }
+
+    // 3. Fallback to hardcoded portfolio
+    tickers = [...PORTFOLIO];
 }
 
 /* ══ Retry single ══ */
@@ -663,7 +1017,7 @@ async function retryOne(symbol) {
 function manualRefresh() { fetchAll(true); }
 
 /* ══════════════════════════════════════════
-   LOCALSTORAGE CACHE
+   LOCALSTORAGE CACHE FOR NEWS
 ══════════════════════════════════════════ */
 const CACHE_KEY = 'pnws_cache_v2';
 
@@ -738,7 +1092,6 @@ function updateMarketStatus() {
     const isWD = day>=1&&day<=5;
     const isAH = tot>=21*60+30;
     const isBH = tot<4*60;
-    // Monday early morning is NOT open (weekend carried over)
     const isOpen = isWD && (isAH || (day!==1 && isBH));
 
     const pill = document.getElementById('marketPill');
@@ -805,9 +1158,11 @@ function startTickers() {
    INIT
 ══════════════════════════════════════════ */
 (async function init() {
+    await initTickers();
+    renderTradingViewWidget();
+
     const saved = restoreCache();
     if (saved && !needsRefresh(saved.ts)) {
-        // Restore cache and render immediately
         Object.entries(saved.data).forEach(([sym,news])=>{
             cache[sym] = Array.isArray(news)
                 ? news.map(n=>({...n, pubDate:n.pubDate?new Date(n.pubDate):null}))
@@ -817,7 +1172,6 @@ function startTickers() {
         renderGrid();
         toast('📦 โหลดจาก cache — ข้อมูลยังทันสมัย');
     } else {
-        // First load or stale — fetch fresh
         renderGrid();
         await fetchAll(true);
     }
