@@ -1576,11 +1576,11 @@ async function searchStockPrice() {
 
         analysisContent.innerHTML = `
             <div style="width:100%; text-align:left; display:flex; flex-direction:column; gap:0.6rem; box-sizing:border-box;">
-                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.4rem; padding-bottom:0.4rem; border-bottom:1px solid var(--border);">
-                    <div style="font-size:0.72rem; color:var(--text-muted);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; padding-bottom:0.6rem; border-bottom:1px solid var(--border);">
+                    <div style="font-size:0.88rem; color:var(--text-muted); display:flex; align-items:center; gap:0.25rem;">
                         ประเมินข่าวรวม: <span style="font-weight:700; color:${score > 0 ? 'var(--accent-green)' : (score < 0 ? 'var(--accent-red)' : 'var(--text-secondary)')};">${sentimentText}</span>
                     </div>
-                    <div style="font-size:0.72rem; font-weight:700; color:${recommendationColor};">
+                    <div style="font-size:0.88rem; font-weight:700; color:${recommendationColor}; display:flex; align-items:center;">
                         ${recommendationText}
                     </div>
                 </div>
