@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio News Dashboard | CIO Risk Desk</title>
+    <meta name="description" content="Real-time portfolio news dashboard — auto-update daily 09:00">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary:    #080e1a;
+            --bg-secondary:  #0d1527;
+            --bg-card:       #0f1a2e;
+            --bg-card-hover: #162036;
+            --accent-blue:   #3b82f6;
+            --accent-green:  #10b981;
+            --accent-red:    #ef4444;
+            --accent-yellow: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-cyan:   #06b6d4;
+            --text-primary:  #f1f5f9;
+            --text-secondary:#94a3b8;
+            --text-muted:    #475569;
+            --border:        #1e2d45;
+            --border-bright: #2a3f5f;
+        }
+
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family:'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(180deg, #0d1527 0%, #080e1a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0.85rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .header-left { display:flex; align-items:center; gap:0.9rem; }
+
+        .logo {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+        }
+
+        .header-title { font-size:1.05rem; font-weight:700; letter-spacing:-0.02em; }
+        .header-subtitle { font-size:0.68rem; color:var(--text-muted); margin-top:2px; }
+
+        .header-right { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; }
+
+        .status-pill {
+            display: flex; align-items: center; gap: 0.45rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.7rem; font-weight: 600;
+        }
+        .status-pill.open  { background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.3); color:#34d399; }
+        .status-pill.closed{ background:rgba(100,116,139,.12); border:1px solid rgba(100,116,139,.3); color:#94a3b8; }
+        .status-pill.weekend{background:rgba(245,158,11,.12);  border:1px solid rgba(245,158,11,.3);  color:#fbbf24; }
+
+        .dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+        .dot.blink { animation:blink 1.8s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+        /* ── BUTTONS ── */
+        .btn {
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px; border: none;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+            font-size: 0.76rem; font-weight: 600;
+            transition: all 0.18s;
+            display: flex; align-items: center; gap: 0.4rem;
+            white-space: nowrap;
+        }
+        .btn-primary { background: var(--accent-blue); color: #fff; box-shadow:0 2px 8px rgba(59,130,246,.35); }
+        .btn-primary:hover { background: #2563eb; transform:translateY(-1px); }
+        .btn-ghost  { background: transparent; border:1px solid var(--border-bright); color:var(--text-secondary); }
+        .btn-ghost:hover { border-color:var(--accent-blue); color:var(--accent-blue); }
+        .btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .spinning { animation: spin .9s linear infinite; display:inline-block; }
+
+        /* ── PROGRESS BAR ── */
+        .progress-bar { height:2px; background:var(--border); }
+        .progress-fill {
+            height:100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            width:0%; transition: width 0.25s;
+        }
+
+        /* ── STATS ── */
+        .stats-bar {
+            padding: 0.6rem 1.75rem;
+            display: flex; align-items: center; gap: 1.5rem;
+            background: rgba(13,21,39,.7);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            font-size: 0.72rem;
+        }
+        .stat { display:flex; align-items:center; gap:0.4rem; }
+        .stat-label { color:var(--text-muted); }
+        .stat-val   { color:var(--text-primary); font-weight:600; }
+        .stat-val.blue   { color:var(--accent-blue); }
+        .stat-val.green  { color:var(--accent-green); }
+        .stat-divider { width:1px; height:14px; background:var(--border); }
+
+        /* ── TOOLBAR ── */
+        .toolbar {
+            padding: 0.75rem 1.75rem;
+            display: flex; align-items: center; gap: 1rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+            flex-wrap: wrap;
+        }
+        .toolbar-label { font-size:0.7rem; color:var(--text-muted); font-weight:500; white-space:nowrap; }
+
+        .chips { display:flex; gap:0.4rem; flex-wrap:wrap; }
+        .chip {
+            padding: 0.22rem 0.65rem;
+            border-radius: 20px;
+            font-size: 0.68rem; font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .chip:hover { transform: translateY(-1px); }
+        .chip.active { box-shadow: 0 0 0 2px currentColor; }
+
+        .chip-all      { background:rgba(59,130,246,.15);  color:#60a5fa; border-color:rgba(59,130,246,.3); }
+        .chip-tech     { background:rgba(99,102,241,.15);  color:#a5b4fc; border-color:rgba(99,102,241,.3); }
+        .chip-finance  { background:rgba(16,185,129,.15);  color:#6ee7b7; border-color:rgba(16,185,129,.3); }
+        .chip-energy   { background:rgba(245,158,11,.15);  color:#fcd34d; border-color:rgba(245,158,11,.3); }
+        .chip-etf      { background:rgba(139,92,246,.15);  color:#c4b5fd; border-color:rgba(139,92,246,.3); }
+        .chip-commodity{ background:rgba(251,191,36,.15);  color:#fde68a; border-color:rgba(251,191,36,.3); }
+
+        /* ── GRID ── */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 1rem;
+            padding: 1.25rem 1.75rem 2.5rem;
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: border-color .2s, box-shadow .2s, transform .2s;
+        }
+        .card:hover {
+            border-color: var(--border-bright);
+            box-shadow: 0 8px 32px rgba(0,0,0,.4);
+            transform: translateY(-2px);
+        }
+
+        .card-head {
+            padding: 0.9rem 1.15rem 0.75rem;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ticker-row { display:flex; align-items:center; gap:0.75rem; }
+
+        .ticker-icon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.58rem; font-weight: 800;
+            flex-shrink: 0; letter-spacing:-0.03em;
+        }
+
+        .ticker-sym  { font-size:.95rem; font-weight:700; }
+        .ticker-name { font-size:.65rem; color:var(--text-muted); margin-top:2px; }
+
+        .badge {
+            font-size:.62rem; font-weight:700;
+            padding: .18rem .5rem;
+            border-radius: 5px;
+        }
+
+        /* ── NEWS LIST ── */
+        .news-list { padding: 0.35rem 0; }
+
+        .news-item {
+            padding: 0.55rem 1.15rem;
+            border-bottom: 1px solid rgba(30,45,69,.5);
+            text-decoration: none; display: block;
+            transition: background .15s;
+        }
+        .news-item:last-child { border-bottom: none; }
+        .news-item:hover { background: rgba(59,130,246,.06); }
+
+        .news-title {
+            font-size: .78rem;
+            color: var(--text-primary);
+            line-height: 1.45;
+            font-weight: 500;
+            margin-bottom: .22rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-meta { display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
+        .news-src  { font-size:.62rem; color:var(--text-muted); }
+        .news-time { font-size:.62rem; color:var(--text-muted); white-space:nowrap; }
+        .news-time.recent { color:var(--accent-green); font-weight:600; }
+
+        /* ── SKELETON ── */
+        .skeleton {
+            background: linear-gradient(90deg, #1a2840 25%, #243355 50%, #1a2840 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.6s infinite;
+            border-radius: 4px;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* ── EMPTY / ERROR ── */
+        .state-msg {
+            padding: 1.2rem;
+            text-align: center;
+            font-size: .75rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        .retry-link {
+            color: var(--accent-blue);
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset:0;
+            background: rgba(0,0,0,.75);
+            z-index: 300;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display:flex; }
+
+        .modal {
+            background: #0f1a2e;
+            border: 1px solid var(--border-bright);
+            border-radius: 16px;
+            padding: 1.5rem;
+            width: 90%; max-width: 480px;
+            max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 24px 60px rgba(0,0,0,.6);
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem;
+        }
+        .modal-title { font-size: 1rem; font-weight: 700; }
+        .modal-close {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 1.2rem; line-height: 1;
+            transition: color .15s;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-note { font-size:.72rem; color:var(--text-muted); margin-bottom:.75rem; line-height:1.5; }
+
+        textarea.ticker-textarea {
+            width: 100%;
+            height: 200px;
+            background: #080e1a;
+            border: 1px solid var(--border-bright);
+            border-radius: 8px;
+            padding: .7rem;
+            color: var(--text-primary);
+            font-family: 'Inter', monospace;
+            font-size: .8rem;
+            resize: vertical;
+            outline: none;
+            line-height: 1.7;
+        }
+        textarea.ticker-textarea:focus { border-color: var(--accent-blue); }
+
+        .modal-actions { display:flex; gap:.65rem; margin-top:1rem; }
+        .modal-actions .btn { flex:1; justify-content:center; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width:640px) {
+            .grid { grid-template-columns: 1fr; padding: .75rem; }
+            .header { padding: .75rem 1rem; }
+            .stats-bar, .toolbar { padding: .6rem 1rem; }
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; bottom:1.5rem; right:1.5rem;
+            background: #1e2d45; border:1px solid var(--border-bright);
+            padding: .65rem 1rem; border-radius:10px;
+            font-size:.75rem; font-weight:500;
+            color: var(--text-primary);
+            box-shadow: 0 8px 24px rgba(0,0,0,.4);
+            transform: translateY(80px); opacity:0;
+            transition: all .3s cubic-bezier(.34,1.56,.64,1);
+            z-index: 400;
+            display: flex; align-items:center; gap:.5rem;
+        }
+        .toast.show { transform:translateY(0); opacity:1; }
+    </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="header">
+    <div class="header-left">
+        <div class="logo">📊</div>
+        <div>
+            <div class="header-title">Portfolio News Dashboard</div>
+            <div class="header-subtitle">CIO Risk Desk Monitor — อัปเดตอัตโนมัติทุกวัน 09:00 น.</div>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="status-pill closed" id="marketPill">
+            <span class="dot" id="marketDot"></span>
+            <span id="marketText">ตรวจสอบ...</span>
+        </div>
+        <button class="btn btn-ghost" onclick="openSettings()">⚙️ จัดการ Tickers</button>
+        <button class="btn btn-primary" id="refreshBtn" onclick="manualRefresh()">
+            <span id="refreshIcon">🔄</span>&nbsp;รีเฟรชข่าว
+        </button>
+    </div>
+</header>
+
+<!-- Progress bar -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<!-- ═══ STATS BAR ═══ -->
+<div class="stats-bar">
+    <div class="stat">
+        <span class="stat-label">อัปเดตล่าสุด:</span>
+        <span class="stat-val" id="lastTime">—</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+        <span class="stat-label">อัปเดตถัดไป (09:00):</span>
+        <span class="stat-val blue" id="countdown">กำลังคำนวณ...</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+        <span class="stat-label">สินทรัพย์ที่แสดง:</span>
+        <span class="stat-val green" id="totalCount">—</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+        <span class="stat-label">แหล่งข่าว:</span>
+        <span class="stat-val">Yahoo Finance RSS</span>
+    </div>
+</div>
+
+<!-- ═══ TOOLBAR ═══ -->
+<div class="toolbar">
+    <span class="toolbar-label">กรองหมวด:</span>
+    <div class="chips" id="filterChips">
+        <span class="chip chip-all active"   data-sector="all"       onclick="setFilter('all')">🗂 ทั้งหมด</span>
+        <span class="chip chip-tech"         data-sector="tech"      onclick="setFilter('tech')">💻 Tech/AI</span>
+        <span class="chip chip-finance"      data-sector="finance"   onclick="setFilter('finance')">🏦 Finance</span>
+        <span class="chip chip-energy"       data-sector="energy"    onclick="setFilter('energy')">⚡ Energy/Nuclear</span>
+        <span class="chip chip-etf"          data-sector="etf"       onclick="setFilter('etf')">📦 ETF</span>
+        <span class="chip chip-commodity"    data-sector="commodity" onclick="setFilter('commodity')">🥇 Commodity</span>
+    </div>
+</div>
+
+<!-- ═══ GRID ═══ -->
+<main class="grid" id="grid"></main>
+
+<!-- ═══ SETTINGS MODAL ═══ -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">⚙️ จัดการ Portfolio Tickers</span>
+            <button class="modal-close" onclick="closeSettings()">✕</button>
+        </div>
+        <p class="modal-note">
+            พิมพ์ Ticker หนึ่งบรรทัดต่อหนึ่งตัว (ตัวพิมพ์ใหญ่/เล็กได้)<br>
+            ระบบจะดึงข่าวจาก Yahoo Finance RSS อัตโนมัติ
+        </p>
+        <textarea class="ticker-textarea" id="tickerTextarea" spellcheck="false"></textarea>
+        <div class="modal-actions">
+            <button class="btn btn-primary"  onclick="saveSettings()">💾 บันทึกและรีเฟรช</button>
+            <button class="btn btn-ghost"    onclick="closeSettings()">ยกเลิก</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIGURATION — แก้ไข Portfolio ตรงนี้
+══════════════════════════════════════════ */
+const PORTFOLIO = [
+    { symbol:'META',  name:'Meta Platforms',           sector:'tech',      color:'#3b82f6' },
+    { symbol:'MSFT',  name:'Microsoft Corporation',    sector:'tech',      color:'#0ea5e9' },
+    { symbol:'NVDA',  name:'NVIDIA Corporation',       sector:'tech',      color:'#76b900' },
+    { symbol:'AMZN',  name:'Amazon.com',               sector:'tech',      color:'#f97316' },
+    { symbol:'ANET',  name:'Arista Networks',          sector:'tech',      color:'#6366f1' },
+    { symbol:'CRWV',  name:'CoreWeave Inc.',           sector:'tech',      color:'#8b5cf6' },
+    { symbol:'VRT',   name:'Vertiv Holdings Co.',      sector:'tech',      color:'#22d3ee' },
+    { symbol:'MOD',   name:'Modine Manufacturing',     sector:'tech',      color:'#60a5fa' },
+    { symbol:'JPM',   name:'JPMorgan Chase & Co.',     sector:'finance',   color:'#10b981' },
+    { symbol:'BAC',   name:'Bank of America',          sector:'finance',   color:'#34d399' },
+    { symbol:'CEG',   name:'Constellation Energy',     sector:'energy',    color:'#f59e0b' },
+    { symbol:'CCJ',   name:'Cameco Corporation',       sector:'energy',    color:'#d97706' },
+    { symbol:'QQQI',  name:'NEOS Nasdaq-100 Hi-Inc.',  sector:'etf',       color:'#a78bfa' },
+    { symbol:'JEPQ',  name:'JPM Nasdaq Prem. Income',  sector:'etf',       color:'#818cf8' },
+    { symbol:'GLD',   name:'SPDR Gold Shares',         sector:'commodity', color:'#fbbf24' },
+    { symbol:'SGOV',  name:'iShares 0-3M Treasury',   sector:'etf',       color:'#94a3b8' },
+];
+
+const SECTOR_LABEL = {
+    tech:'💻 Tech/AI', finance:'🏦 Finance',
+    energy:'⚡ Energy', etf:'📦 ETF', commodity:'🥇 Commodity'
+};
+const SECTOR_CLASS = {
+    tech:'chip-tech', finance:'chip-finance',
+    energy:'chip-energy', etf:'chip-etf', commodity:'chip-commodity'
+};
+const BADGE_STYLE = {
+    tech:     'background:rgba(99,102,241,.2); color:#a5b4fc;',
+    finance:  'background:rgba(16,185,129,.2); color:#6ee7b7;',
+    energy:   'background:rgba(245,158,11,.2); color:#fcd34d;',
+    etf:      'background:rgba(139,92,246,.2); color:#c4b5fd;',
+    commodity:'background:rgba(251,191,36,.2); color:#fde68a;',
+};
+const MAX_NEWS = 5;   // ข่าวต่อตัว
+const CONCURRENCY = 3; // เรียก API พร้อมกันสูงสุดกี่ตัว
+
+/* ══ State ══ */
+let tickers      = [...PORTFOLIO];
+let cache        = {};   // { SYMBOL: [{title,link,source,pubDate}] | null }
+let currentFilter = 'all';
+let isFetching   = false;
+
+/* ══════════════════════════════════════════
+   FETCH NEWS
+══════════════════════════════════════════ */
+async function fetchTicker(symbol) {
+    const rss = encodeURIComponent(
+        `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${symbol}&region=US&lang=en-US`
+    );
+    const url = `https://api.rss2json.com/v1/api.json?rss_url=${rss}&count=${MAX_NEWS}`;
+    try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if (d.status !== 'ok') throw new Error('Feed error');
+        return (d.items || []).map(item => ({
+            title  : item.title   || '',
+            link   : item.link    || '#',
+            source : cleanSource(item.author || item.link),
+            pubDate: item.pubDate ? new Date(item.pubDate) : null,
+        }));
+    } catch(e) {
+        console.warn(`[${symbol}]`, e.message);
+        return null;
+    }
+}
+
+function cleanSource(s) {
+    if (!s) return '';
+    if (s.startsWith('http')) {
+        try { return new URL(s).hostname.replace(/^www\./,'').split('.')[0].toUpperCase(); }
+        catch { return ''; }
+    }
+    return s.length > 18 ? s.slice(0,18) : s;
+}
+
+/* ══ Batch fetch with concurrency ══ */
+async function fetchAll(forceRefresh=false) {
+    if (isFetching) return;
+    isFetching = true;
+    setRefreshState(true);
+
+    if (forceRefresh) cache = {};
+    renderGrid();
+
+    const pending = tickers.filter(t => !(t.symbol in cache));
+    const total   = pending.length;
+    let   done    = 0;
+
+    const chunks = [];
+    for (let i=0; i<pending.length; i+=CONCURRENCY) chunks.push(pending.slice(i,i+CONCURRENCY));
+
+    for (const chunk of chunks) {
+        await Promise.all(chunk.map(async t => {
+            const news = await fetchTicker(t.symbol);
+            cache[t.symbol] = news;
+            done++;
+            setProgress((done/Math.max(total,1))*100);
+            patchCard(t);
+        }));
+    }
+
+    persistCache();
+    updateLastTime(new Date());
+    setProgress(100);
+    setTimeout(()=>setProgress(0), 800);
+
+    isFetching = false;
+    setRefreshState(false);
+    toast('✅ โหลดข่าวครบทุกตัวแล้ว');
+}
+
+/* ══════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════ */
+function renderGrid() {
+    const filtered = currentFilter==='all'
+        ? tickers
+        : tickers.filter(t=>t.sector===currentFilter);
+
+    document.getElementById('grid').innerHTML = filtered.map(cardHTML).join('');
+    document.getElementById('totalCount').textContent = `${filtered.length} ตัว`;
+}
+
+function cardHTML(t) {
+    const news = cache[t.symbol]; // undefined=loading, null=error, []=no news
+    const sClass = SECTOR_CLASS[t.sector]||'chip-tech';
+    const bStyle = BADGE_STYLE[t.sector]||'';
+    const sLabel = SECTOR_LABEL[t.sector]||t.sector;
+
+    let body;
+    if (news === undefined) {
+        body = [1,2,3,4].map(()=>`
+            <div class="news-item" style="cursor:default">
+                <div class="skeleton" style="height:.75rem;width:90%;margin-bottom:.3rem;"></div>
+                <div class="skeleton" style="height:.75rem;width:65%;margin-bottom:.4rem;"></div>
+                <div class="skeleton" style="height:.6rem;width:35%;"></div>
+            </div>`).join('');
+    } else if (news === null) {
+        body = `<div class="state-msg">⚠️ โหลดข่าวไม่สำเร็จ<br>
+            <span class="retry-link" onclick="retryOne('${esc(t.symbol)}')">ลองใหม่อีกครั้ง →</span></div>`;
+    } else if (news.length === 0) {
+        body = `<div class="state-msg">📭 ยังไม่มีข่าวล่าสุด</div>`;
+    } else {
+        body = news.map(n=>`
+            <a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer" class="news-item">
+                <div class="news-title">${esc(n.title)}</div>
+                <div class="news-meta">
+                    <span class="news-src">${esc(n.source)}</span>
+                    <span class="news-time ${recentClass(n.pubDate)}">${timeAgo(n.pubDate)}</span>
+                </div>
+            </a>`).join('');
+    }
+
+    const newsCount = Array.isArray(news) ? `${news.length} ข่าว` : '';
+
+    return `
+    <article class="card" id="card-${t.symbol}">
+        <div class="card-head">
+            <div class="ticker-row">
+                <div class="ticker-icon" style="background:linear-gradient(135deg,${t.color}22,${t.color}44);
+                     border:1.5px solid ${t.color}55; color:${t.color}; font-size:.58rem;">
+                    ${esc(t.symbol)}
+                </div>
+                <div>
+                    <div class="ticker-sym">${esc(t.symbol)}</div>
+                    <div class="ticker-name">${esc(t.name)}</div>
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;">
+                <span class="badge" style="${bStyle}">${sLabel}</span>
+                ${newsCount ? `<span style="font-size:.58rem;color:var(--text-muted);">${newsCount}</span>` : ''}
+            </div>
+        </div>
+        <div class="news-list">${body}</div>
+    </article>`;
+}
+
+function patchCard(t) {
+    const el = document.getElementById('card-'+t.symbol);
+    if (el) el.outerHTML = cardHTML(t);
+}
+
+/* ══════════════════════════════════════════
+   FILTERS
+══════════════════════════════════════════ */
+function setFilter(sector) {
+    currentFilter = sector;
+    document.querySelectorAll('#filterChips .chip').forEach(c=>{
+        c.classList.toggle('active', c.dataset.sector===sector);
+    });
+    renderGrid();
+    // Fetch any uncached in new view
+    const filtered = sector==='all' ? tickers : tickers.filter(t=>t.sector===sector);
+    filtered.filter(t=>!(t.symbol in cache)).forEach(async t=>{
+        cache[t.symbol] = await fetchTicker(t.symbol);
+        patchCard(t);
+        persistCache();
+    });
+}
+
+/* ══════════════════════════════════════════
+   SETTINGS
+══════════════════════════════════════════ */
+function openSettings() {
+    document.getElementById('tickerTextarea').value = tickers.map(t=>t.symbol).join('\n');
+    document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('open');
+}
+function saveSettings() {
+    const raw = document.getElementById('tickerTextarea').value;
+    const syms = [...new Set(
+        raw.split('\n').map(s=>s.trim().toUpperCase()).filter(s=>s&&s.length<=6)
+    )];
+    if (!syms.length) { alert('ใส่ Ticker อย่างน้อย 1 ตัว'); return; }
+
+    tickers = syms.map(sym => {
+        const found = PORTFOLIO.find(p=>p.symbol===sym) || tickers.find(p=>p.symbol===sym);
+        return found || { symbol:sym, name:sym, sector:'tech', color:'#3b82f6' };
+    });
+    cache = {};
+    closeSettings();
+    fetchAll(true);
+}
+
+/* ══ Retry single ══ */
+async function retryOne(symbol) {
+    const t = tickers.find(x=>x.symbol===symbol);
+    if (!t) return;
+    delete cache[symbol];
+    patchCard(t);
+    cache[symbol] = await fetchTicker(symbol);
+    patchCard(t);
+    persistCache();
+}
+
+/* ══ Manual refresh ══ */
+function manualRefresh() { fetchAll(true); }
+
+/* ══════════════════════════════════════════
+   LOCALSTORAGE CACHE
+══════════════════════════════════════════ */
+const CACHE_KEY = 'pnws_cache_v2';
+
+function persistCache() {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            ts: new Date().toISOString(),
+            data: Object.fromEntries(
+                Object.entries(cache).map(([k,v]) => [k, Array.isArray(v)
+                    ? v.map(n=>({...n, pubDate: n.pubDate ? n.pubDate.toISOString() : null}))
+                    : v
+                ])
+            )
+        }));
+    } catch(e) { console.warn('Cache write failed'); }
+}
+
+function restoreCache() {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch { return null; }
+}
+
+function needsRefresh(ts) {
+    const saved  = new Date(ts);
+    const now    = new Date();
+    const nine   = new Date(now); nine.setHours(9,0,0,0);
+    const age    = (now-saved)/3600000;
+    if (age>24) return true;
+    if (now>nine && saved<nine) return true;
+    return false;
+}
+
+/* ══════════════════════════════════════════
+   TIME HELPERS
+══════════════════════════════════════════ */
+function timeAgo(d) {
+    if (!d) return '';
+    const s = (new Date()-d)/1000;
+    if (s<60)     return 'เมื่อกี้';
+    if (s<3600)   return `${Math.floor(s/60)} นาทีที่แล้ว`;
+    if (s<86400)  return `${Math.floor(s/3600)} ชั่วโมงที่แล้ว`;
+    if (s<172800) return 'เมื่อวาน';
+    return d.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+}
+function recentClass(d) { return d&&(new Date()-d)<21600000?'recent':''; }
+
+function updateLastTime(d) {
+    document.getElementById('lastTime').textContent =
+        d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) + ' น.';
+}
+
+function updateCountdown() {
+    const now  = new Date();
+    let next   = new Date(now); next.setHours(9,0,0,0);
+    if (now>=next) next.setDate(next.getDate()+1);
+    while(next.getDay()===0||next.getDay()===6) next.setDate(next.getDate()+1);
+    const ms   = next-now;
+    const h    = Math.floor(ms/3600000);
+    const m    = Math.floor((ms%3600000)/60000);
+    const s    = Math.floor((ms%60000)/1000);
+    document.getElementById('countdown').textContent = `อีก ${h}ชม. ${m}น. ${s}ว.`;
+}
+
+function updateMarketStatus() {
+    const now  = new Date();
+    const day  = now.getDay();
+    const tot  = now.getHours()*60 + now.getMinutes();
+    // Thai time: US open 21:30 – 04:00 (next day)
+    const isWD = day>=1&&day<=5;
+    const isAH = tot>=21*60+30;
+    const isBH = tot<4*60;
+    // Monday early morning is NOT open (weekend carried over)
+    const isOpen = isWD && (isAH || (day!==1 && isBH));
+
+    const pill = document.getElementById('marketPill');
+    const dot  = document.getElementById('marketDot');
+    const txt  = document.getElementById('marketText');
+
+    pill.className = 'status-pill';
+    dot.className  = 'dot';
+
+    if (day===0||day===6) {
+        pill.classList.add('weekend'); txt.textContent='วันหยุด 📅';
+    } else if (isOpen) {
+        pill.classList.add('open'); dot.classList.add('blink');
+        txt.textContent='ตลาดเปิด 🟢';
+    } else {
+        pill.classList.add('closed'); txt.textContent='ตลาดปิด 🔴';
+    }
+}
+
+/* ══════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════ */
+function setProgress(pct) {
+    document.getElementById('progressFill').style.width = pct+'%';
+}
+function setRefreshState(loading) {
+    const btn  = document.getElementById('refreshBtn');
+    const icon = document.getElementById('refreshIcon');
+    btn.disabled = loading;
+    icon.classList.toggle('spinning', loading);
+    icon.textContent = loading ? '⏳' : '🔄';
+}
+
+let toastTimer;
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+function esc(s) {
+    if (!s) return '';
+    return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════════════
+   AUTO-REFRESH @ 09:00 DAILY
+══════════════════════════════════════════ */
+function startTickers() {
+    updateCountdown();
+    updateMarketStatus();
+    setInterval(()=>{
+        updateCountdown();
+        updateMarketStatus();
+        if (!isFetching && needsRefresh(new Date().toISOString())) fetchAll(true);
+    }, 60_000); // check every minute
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+(async function init() {
+    const saved = restoreCache();
+    if (saved && !needsRefresh(saved.ts)) {
+        // Restore cache and render immediately
+        Object.entries(saved.data).forEach(([sym,news])=>{
+            cache[sym] = Array.isArray(news)
+                ? news.map(n=>({...n, pubDate:n.pubDate?new Date(n.pubDate):null}))
+                : news;
+        });
+        updateLastTime(new Date(saved.ts));
+        renderGrid();
+        toast('📦 โหลดจาก cache — ข้อมูลยังทันสมัย');
+    } else {
+        // First load or stale — fetch fresh
+        renderGrid();
+        await fetchAll(true);
+    }
+    startTickers();
+})();
+</script>
+</body>
+</html>
