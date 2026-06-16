@@ -356,6 +356,15 @@
         .modal-actions .btn { flex:1; justify-content:center; }
 
         /* ── RESPONSIVE ── */
+        .widget-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            align-items: stretch;
+        }
+        @media (max-width:768px) {
+            .widget-grid { grid-template-columns: 1fr; }
+        }
         @media (max-width:640px) {
             .grid { grid-template-columns: 1fr; padding: .75rem; }
             .header { padding: .75rem 1rem; }
@@ -450,18 +459,50 @@
     </div>
 </section>
 
-<!-- ═══ REAL-TIME PRICE WIDGET (TRADINGVIEW) ═══ -->
+<!-- ═══ REAL-TIME PRICE SEARCH & WIDGET ═══ -->
 <section class="widget-section" style="padding: 0 1.75rem 0.5rem; margin-top: 1.25rem;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-        <h3 style="font-size:0.85rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
-            📈 ตารางราคาสดเปรียบเทียบตลาด (TradingView Quotes Panel)
-        </h3>
-        <button class="btn btn-ghost" style="padding: 0.2rem 0.5rem; font-size:0.65rem;" onclick="toggleWidget()">
-            <span id="toggleWidgetText">🙈 ซ่อนตาราง</span>
-        </button>
-    </div>
-    <div id="tradingview-wrapper" style="height: 320px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #ffffff;">
-        <div id="tradingview-widget" style="height: 100%;"></div>
+    <div class="widget-grid">
+        <!-- Left: Search Box -->
+        <div style="border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; background: #ffffff; display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div>
+                <h3 style="font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-bottom:0.6rem; display:flex; align-items:center; gap:0.4rem;">
+                    🔍 ค้นหาราคาหุ้นเรียลไทม์ (Live Price Lookup)
+                </h3>
+                <p style="font-size:0.68rem; color:var(--text-muted); margin-bottom:0.85rem;">
+                    พิมพ์สัญลักษณ์ย่อหุ้น (เช่น AAPL, TSLA, BTC-USD) เพื่อตรวจสอบราคาปัจจุบันได้ทันที
+                </p>
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.85rem;">
+                    <input type="text" id="searchTickerInput" placeholder="เช่น AAPL, TSLA, BTC-USD" style="flex:1; padding:0.5rem 0.75rem; border:1px solid var(--border-bright); border-radius:8px; font-size:0.8rem; font-weight:600; outline:none; text-transform:uppercase;" onkeydown="if(event.key==='Enter') searchStockPrice()">
+                    <button class="btn btn-primary" onclick="searchStockPrice()">🔍 ค้นหา</button>
+                </div>
+            </div>
+            
+            <!-- Result Box -->
+            <div id="searchResultBox" style="background:#f8fafc; border:1px dashed var(--border); border-radius:8px; padding:0.85rem; display:flex; align-items:center; justify-content:center; min-height:100px; text-align:center; font-size:0.75rem; color:var(--text-muted);">
+                พิมพ์สัญลักษณ์หุ้นและกดค้นหาเพื่อดูราคา
+            </div>
+        </div>
+
+        <!-- Right: TradingView Quotes Panel or Tickers List fallback -->
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:0.85rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
+                    📈 ตารางราคาตลาดสด (TradingView Quotes Panel)
+                </h3>
+                <button class="btn btn-ghost" style="padding: 0.2rem 0.5rem; font-size:0.65rem;" onclick="toggleWidget()">
+                    <span id="toggleWidgetText">🙈 ซ่อนตาราง</span>
+                </button>
+            </div>
+            <div id="tradingview-wrapper" style="flex:1; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #ffffff; min-height: 240px; display:flex; flex-direction:column;">
+                <div id="tradingview-widget" style="height: 100%;">
+                    <!-- Fallback content if script fails to load -->
+                    <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.75rem; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                        <span>ระบบกำลังพยายามโหลดตารางจาก TradingView...</span>
+                        <span style="font-size: 0.65rem; margin-top: 0.4rem; color: var(--text-muted);">หากไม่แสดงผล อาจเกิดจาก Adblocker หรือการปิดกั้นคุกกี้ในบราวเซอร์ของคุณ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -777,15 +818,14 @@ async function fetchPrices() {
         }
     }
 
-    // B. Fallback: Yahoo Finance via AllOrigins (best-effort)
+    // B. Fallback: Yahoo Finance via corsproxy.io (faster and more reliable)
     symbols.forEach(async sym => {
         try {
-            const url = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + sym + '?interval=1d&range=1d')}`;
-            const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+            const url = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + sym + '?interval=1d&range=1d')}`;
+            const r = await fetch(url);
             if (r.ok) {
                 const d = await r.json();
-                const inner = JSON.parse(d.contents);
-                const price = inner.chart.result[0].meta.regularMarketPrice;
+                const price = d.chart.result[0].meta.regularMarketPrice;
                 if (price) {
                     livePrices[sym] = '$' + parseFloat(price).toFixed(2);
                     const cell = document.getElementById(`price-${sym}`);
@@ -1006,6 +1046,120 @@ function toggleWidget() {
         wrapper.style.display = 'none';
         text.textContent = '👀 แสดงตาราง';
     }
+}
+
+/* ══════════════════════════════════════════
+   LIVE PRICE SEARCH (CORS-SAFE)
+══════════════════════════════════════════ */
+async function searchStockPrice() {
+    const input = document.getElementById('searchTickerInput');
+    const symbol = input.value.trim().toUpperCase();
+    const resultBox = document.getElementById('searchResultBox');
+    
+    if (!symbol) {
+        alert('กรุณากรอกสัญลักษณ์หุ้น');
+        return;
+    }
+    
+    resultBox.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem; width:100%;">
+            <span class="spinning" style="font-size:1.2rem;">⏳</span>
+            <span>กำลังค้นหาราคาของ ${symbol}...</span>
+        </div>`;
+        
+    let price = null;
+    let change = null;
+    let changePercent = null;
+    let tdKey = null;
+    
+    try {
+        tdKey = localStorage.getItem('pnws_twelvedata_key');
+    } catch(e) {}
+
+    // 1. Try Twelve Data first if key exists
+    if (tdKey) {
+        try {
+            const url = `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${tdKey}`;
+            const r = await fetch(url);
+            if (r.ok) {
+                const d = await r.json();
+                if (d.close || d.price) {
+                    price = parseFloat(d.close || d.price);
+                    change = parseFloat(d.change || 0);
+                    changePercent = parseFloat(d.percent_change || 0);
+                }
+            }
+        } catch(e) {
+            console.warn('Twelve Data search failed', e);
+        }
+    }
+
+    // 2. Fallback to Yahoo Finance via corsproxy.io
+    if (!price) {
+        try {
+            const url = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + symbol + '?interval=1d&range=1d')}`;
+            const r = await fetch(url);
+            if (r.ok) {
+                const d = await r.json();
+                const result = d.chart.result[0];
+                const meta = result.meta;
+                price = meta.regularMarketPrice;
+                const prevClose = meta.previousClose;
+                if (price && prevClose) {
+                    change = price - prevClose;
+                    changePercent = (change / prevClose) * 100;
+                }
+            }
+        } catch(e) {
+            console.warn('Yahoo Finance search failed', e);
+        }
+    }
+
+    if (price) {
+        const sign = change >= 0 ? '+' : '';
+        const color = change >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+        const changeText = change !== null ? `${sign}${change.toFixed(2)} (${sign}${changePercent.toFixed(2)}%)` : '';
+        
+        // Check if ticker already exists in portfolio
+        const exists = tickers.some(t => t.symbol === symbol);
+        const addBtnHtml = exists 
+            ? `<span style="font-size:0.68rem; color:var(--accent-green); font-weight:600; display:flex; align-items:center; gap:0.2rem;">✅ มีในพอร์ตแล้ว</span>`
+            : `<button class="btn btn-primary" style="padding:0.25rem 0.6rem; font-size:0.68rem;" onclick="addSearchedTicker('${symbol}')">➕ เพิ่มเข้าพอร์ต</button>`;
+
+        resultBox.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; text-align:left; background:#fff; border:1px solid var(--border); border-radius:8px; padding:0.65rem 0.85rem; box-shadow:0 1px 3px rgba(0,0,0,0.02); box-sizing:border-box;">
+                <div>
+                    <div style="font-size:0.9rem; font-weight:700; color:var(--text-primary);">${symbol}</div>
+                    <div style="font-size:1.15rem; font-weight:800; font-family:'Inter', monospace; margin-top:2px;">$${price.toFixed(2)}</div>
+                    ${changeText ? `<div style="font-size:0.68rem; font-weight:600; color:${color}; margin-top:1px;">${changeText}</div>` : ''}
+                </div>
+                <div>
+                    ${addBtnHtml}
+                </div>
+            </div>`;
+    } else {
+        resultBox.innerHTML = `
+            <div style="color:var(--accent-red); font-weight:600;">
+                ❌ ไม่พบข้อมูลหุ้นชื่อ "${symbol}"<br>
+                <span style="font-size:0.65rem; font-weight:normal; color:var(--text-muted);">โปรดตรวจสอบตัวสะกด หรือเปิดใช้ Twelve Data Key ในตั้งค่าเพื่อค้นหาได้เสถียรขึ้น</span>
+            </div>`;
+    }
+}
+
+// Add ticker from search box
+async function addSearchedTicker(symbol) {
+    if (tickers.some(t => t.symbol === symbol)) return;
+    const newTicker = {
+        symbol: symbol,
+        name: symbol,
+        sector: 'tech',
+        color: getRandomColor()
+    };
+    tickers.push(newTicker);
+    await saveAndSync();
+    // Refresh search box UI
+    searchStockPrice();
+    toast(`➕ เพิ่มหุ้น ${symbol} เข้าพอร์ตเรียบร้อย!`);
 }
 
 /* ══════════════════════════════════════════
