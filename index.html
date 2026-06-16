@@ -470,13 +470,13 @@ async function fetchTicker(symbol) {
     const rss = encodeURIComponent(
         `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${symbol}&region=US&lang=en-US`
     );
-    const url = `https://api.rss2json.com/v1/api.json?rss_url=${rss}&count=${MAX_NEWS}`;
+    const url = `https://api.rss2json.com/v1/api.json?rss_url=${rss}`;
     try {
         const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const d = await r.json();
         if (d.status !== 'ok') throw new Error('Feed error');
-        return (d.items || []).map(item => ({
+        return (d.items || []).slice(0, MAX_NEWS).map(item => ({
             title  : item.title   || '',
             link   : item.link    || '#',
             source : cleanSource(item.author || item.link),
