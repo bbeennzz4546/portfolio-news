@@ -684,10 +684,38 @@ async function fetchTicker(symbol) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const d = await r.json();
         if (d.status !== 'ok') throw new Error('Feed error');
-        return (d.items || []).slice(0, MAX_NEWS).map(item => ({
+        
+        let items = d.items || [];
+        
+        // Fallback to Google News search if Yahoo returns no articles (common for Thai stocks like SCB, CPALL)
+        if (items.length === 0) {
+            try {
+                const query = isThai 
+                    ? encodeURIComponent(`${symbol.replace('.BK','')} หุ้น`)
+                    : encodeURIComponent(`${symbol} stock`);
+                const gl = isThai ? 'TH' : 'US';
+                const hl = isThai ? 'th' : 'en';
+                const ceid = isThai ? 'TH:th' : 'US:en';
+                const googleRss = encodeURIComponent(
+                    `https://news.google.com/rss/search?q=${query}&hl=${hl}&gl=${gl}&ceid=${ceid}`
+                );
+                const googleUrl = `https://api.rss2json.com/v1/api.json?rss_url=${googleRss}`;
+                const r2 = await fetch(googleUrl);
+                if (r2.ok) {
+                    const d2 = await r2.json();
+                    if (d2.status === 'ok' && d2.items && d2.items.length > 0) {
+                        items = d2.items;
+                    }
+                }
+            } catch(e2) {
+                console.warn(`[${symbol}] Google News fallback failed`, e2.message);
+            }
+        }
+        
+        return items.slice(0, MAX_NEWS).map(item => ({
             title  : item.title   || '',
             link   : item.link    || '#',
-            source : cleanSource(item.author || item.link),
+            source : cleanSource(item.author || item.link || (item.source && item.source.title)),
             pubDate: item.pubDate ? new Date(item.pubDate) : null,
         }));
     } catch(e) {
