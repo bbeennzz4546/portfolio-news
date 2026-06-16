@@ -658,8 +658,8 @@ const BADGE_STYLE = {
     etf:      'background:rgba(109,40,217,.1); color:#6d28d9;',
     commodity:'background:rgba(180,83,9,.1); color:#b45309;',
 };
-const MAX_NEWS = 5;   // ข่าวต่อตัว
-const CONCURRENCY = 3; // เรียก API พร้อมกันสูงสุดกี่ตัว
+const MAX_NEWS = 5;    // ข่าวต่อตัว
+const CONCURRENCY = 2;  // เรียก API พร้อมกันสูงสุด — 2 ตัวเพื่อไม่ให้ rate-limit
 
 /* ══ State ══ */
 let tickers      = [];
@@ -714,10 +714,11 @@ async function fetchTicker(symbol) {
     const isThai = symbol.endsWith('.BK');
     const region  = isThai ? 'TH&lang=th-TH' : 'US&lang=en-US';
 
-    /* safe fetch — no AbortSignal so older browsers/webviews don't crash */
-    const safeFetchJson = async (url) => {
+    /* safe fetch with timeout — compatible with ALL browsers (no AbortSignal needed) */
+    const safeFetchJson = async (url, ms = 9000) => {
         try {
-            const r = await fetch(url);
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+            const r = await Promise.race([fetch(url), timeout]);
             if (r.ok) return await r.json();
         } catch(e) {}
         return null;
@@ -868,50 +869,48 @@ async function fetchPrices() {
     const symbols = tickers.map(t => t.symbol);
     if (symbols.length === 0) return;
 
+    /* shared safe fetch with Promise.race timeout */
+    const safeGet = async (url, ms = 9000) => {
+        try {
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+            const r = await Promise.race([fetch(url), timeout]);
+            if (r.ok) return await r.json();
+        } catch(e) {}
+        return null;
+    };
+
     // A. Use Twelve Data if API Key is configured (100% stable & fast)
     if (tdKey) {
-        try {
-            const url = `https://api.twelvedata.com/price?symbol=${symbols.join(',')}&apikey=${tdKey}`;
-            const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-            if (r.ok) {
-                const d = await r.json();
-                if (symbols.length === 1) {
-                    const sym = symbols[0];
-                    if (d.price) {
-                        livePrices[sym] = '$' + parseFloat(d.price).toFixed(2);
-                    }
-                } else {
-                    Object.entries(d).forEach(([sym, val]) => {
-                        if (val && val.price) {
-                            livePrices[sym] = '$' + parseFloat(val.price).toFixed(2);
-                        }
-                    });
-                }
-                renderSummaryTable();
-                return;
+        const d = await safeGet(`https://api.twelvedata.com/price?symbol=${symbols.join(',')}&apikey=${tdKey}`);
+        if (d) {
+            if (symbols.length === 1) {
+                const sym = symbols[0];
+                if (d.price) livePrices[sym] = '$' + parseFloat(d.price).toFixed(2);
+            } else {
+                Object.entries(d).forEach(([sym, val]) => {
+                    if (val && val.price) livePrices[sym] = '$' + parseFloat(val.price).toFixed(2);
+                });
             }
-        } catch(e) {
-            console.warn('Twelve Data price fetch failed, trying fallback', e);
+            renderSummaryTable();
+            return;
         }
     }
 
-    // B. Fallback: Yahoo Finance via corsproxy.io (faster and more reliable)
-    symbols.forEach(async sym => {
-        try {
-            const url = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + sym + '?interval=1d&range=1d')}`;
-            const r = await fetch(url);
-            if (r.ok) {
-                const d = await r.json();
+    // B. Fallback: Yahoo Finance via corsproxy.io — fire-and-forget with timeout
+    symbols.forEach(sym => {
+        const url = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + sym + '?interval=1d&range=1d')}`;
+        safeGet(url, 10000).then(d => {
+            try {
                 const price = d.chart.result[0].meta.regularMarketPrice;
+                const prev  = d.chart.result[0].meta.previousClose;
                 if (price) {
-                    livePrices[sym] = '$' + parseFloat(price).toFixed(2);
+                    const curr = sym.endsWith('.BK') ? '฿' : '$';
+                    livePrices[sym] = curr + parseFloat(price).toFixed(2);
                     const cell = document.getElementById(`price-${sym}`);
                     if (cell) cell.textContent = livePrices[sym];
                 }
-            }
-        } catch(e) {
-            // keep existing price
-        }
+            } catch(e) {}
+        });
     });
 }
 
