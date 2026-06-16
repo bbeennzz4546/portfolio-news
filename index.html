@@ -395,7 +395,7 @@
         <div class="logo">📊</div>
         <div>
             <div class="header-title">Portfolio News Dashboard</div>
-            <div class="header-subtitle">CIO Risk Desk Monitor — อัปเดตอัตโนมัติทุกวัน 09:00 น.</div>
+            <div class="header-subtitle">CIO Risk Desk Monitor — อัปเดตอัตโนมัติทุกวัน 09:00, 16:00, 20:00, 23:00 น.</div>
         </div>
     </div>
     <div class="header-right">
@@ -422,7 +422,7 @@
     </div>
     <div class="stat-divider"></div>
     <div class="stat">
-        <span class="stat-label">อัปเดตถัดไป (09:00):</span>
+        <span class="stat-label">อัปเดตถัดไป:</span>
         <span class="stat-val blue" id="countdown">กำลังคำนวณ...</span>
     </div>
     <div class="stat-divider"></div>
@@ -1490,14 +1490,71 @@ function restoreCache() {
     } catch { return null; }
 }
 
+const SCHEDULE_HOURS = [9, 16, 20, 23];
+
+function getNextCheckpoint(now) {
+    let candidates = [];
+    for (let dayOffset = 0; dayOffset < 8; dayOffset++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() + dayOffset);
+        d.setMinutes(0);
+        d.setSeconds(0);
+        d.setMilliseconds(0);
+        
+        for (const h of SCHEDULE_HOURS) {
+            const candidate = new Date(d);
+            candidate.setHours(h);
+            
+            // Skip weekends
+            if (candidate.getDay() === 0 || candidate.getDay() === 6) {
+                continue;
+            }
+            
+            if (candidate > now) {
+                candidates.push(candidate);
+            }
+        }
+        if (candidates.length > 0) break;
+    }
+    candidates.sort((a, b) => a - b);
+    return candidates[0];
+}
+
+function getLastCheckpoint(now) {
+    let candidates = [];
+    for (let dayOffset = 0; dayOffset > -8; dayOffset--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() + dayOffset);
+        d.setMinutes(0);
+        d.setSeconds(0);
+        d.setMilliseconds(0);
+        
+        for (const h of SCHEDULE_HOURS) {
+            const candidate = new Date(d);
+            candidate.setHours(h);
+            
+            // Skip weekends
+            if (candidate.getDay() === 0 || candidate.getDay() === 6) {
+                continue;
+            }
+            
+            if (candidate <= now) {
+                candidates.push(candidate);
+            }
+        }
+        if (candidates.length > 0) break;
+    }
+    candidates.sort((a, b) => b - a);
+    return candidates[0];
+}
+
 function needsRefresh(ts) {
-    const saved  = new Date(ts);
-    const now    = new Date();
-    const nine   = new Date(now); nine.setHours(9,0,0,0);
-    const age    = (now-saved)/3600000;
-    if (age>24) return true;
-    if (now>nine && saved<nine) return true;
-    return false;
+    const saved = new Date(ts);
+    const now = new Date();
+    const lastCheck = getLastCheckpoint(now);
+    if (!lastCheck) return false;
+    if ((now - saved) / 3600000 > 24) return true;
+    return saved < lastCheck;
 }
 
 /* ══════════════════════════════════════════
@@ -1521,10 +1578,12 @@ function updateLastTime(d) {
 
 function updateCountdown() {
     const now  = new Date();
-    let next   = new Date(now); next.setHours(9,0,0,0);
-    if (now>=next) next.setDate(next.getDate()+1);
-    while(next.getDay()===0||next.getDay()===6) next.setDate(next.getDate()+1);
-    const ms   = next-now;
+    const next = getNextCheckpoint(now);
+    if (!next) {
+        document.getElementById('countdown').textContent = 'กำลังคำนวณ...';
+        return;
+    }
+    const ms   = next - now;
     const h    = Math.floor(ms/3600000);
     const m    = Math.floor((ms%3600000)/60000);
     const s    = Math.floor((ms%60000)/1000);
