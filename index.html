@@ -7,6 +7,7 @@
     <meta name="description" content="Real-time portfolio news dashboard — auto-update daily 09:00">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-primary:    #f8fafc; /* Slate 50 */
@@ -1138,37 +1139,153 @@ function switchAnalysisTab(tab) {
     }
 }
 
-function renderMiniChart(symbol) {
-    const container = document.getElementById('tv-mini-chart');
+/* ══════════════════════════════════════════
+   REAL-TIME CHART — Yahoo Finance + Chart.js
+   No TradingView needed!
+══════════════════════════════════════════ */
+let _currentChartSymbol = null;
+let _chartInstance = null;
+
+const CHART_RANGES = {
+    '1D': { interval: '5m',  range: '1d'  },
+    '5D': { interval: '30m', range: '5d'  },
+    '1M': { interval: '1d',  range: '1mo' },
+    '3M': { interval: '1d',  range: '3mo' },
+    '6M': { interval: '1d',  range: '6mo' },
+    '1Y': { interval: '1d',  range: '1y'  },
+};
+
+let _activeChartRange = '5D';
+
+async function loadAndRenderChart(symbol, period) {
+    _currentChartSymbol = symbol;
+    _activeChartRange = period;
+
+    const container = document.getElementById('yf-chart-area');
     if (!container) return;
-    container.innerHTML = ''; // Clear previous chart
-    
-    let tvSymbol = symbol;
-    if (symbol.endsWith('.BK')) {
-        tvSymbol = 'SET:' + symbol.replace('.BK', '');
-    } else {
-        tvSymbol = mapToTradingView(symbol);
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.75rem;">⏳ กำลังโหลดกราฟ...</div>';
+
+    /* Update period button states */
+    ['1D','5D','1M','3M','6M','1Y'].forEach(p => {
+        const btn = document.getElementById('chart-btn-' + p);
+        if (!btn) return;
+        btn.style.background   = p === period ? 'var(--accent-blue)' : 'transparent';
+        btn.style.color        = p === period ? '#fff' : 'var(--text-muted)';
+        btn.style.borderColor  = p === period ? 'var(--accent-blue)' : 'var(--border)';
+    });
+
+    const { interval, range } = CHART_RANGES[period];
+    const proxyBase = 'https://corsproxy.io/?';
+    const yfUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=false`;
+
+    let timestamps = [], closes = [], meta = null;
+
+    try {
+        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000));
+        const r = await Promise.race([fetch(proxyBase + encodeURIComponent(yfUrl)), timeout]);
+        if (r.ok) {
+            const d = await r.json();
+            const result = d?.chart?.result?.[0];
+            if (result) {
+                meta       = result.meta;
+                timestamps = result.timestamp || [];
+                closes     = result.indicators?.quote?.[0]?.close || [];
+            }
+        }
+    } catch(e) {
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.75rem;">⚠️ ไม่สามารถโหลดกราฟได้</div>';
+        return;
     }
-    
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
-    script.async = true;
-    
-    const config = {
-        "symbol": tvSymbol,
-        "width": "100%",
-        "height": "100%",
-        "locale": "th",
-        "dateRange": "3M",
-        "colorTheme": "light",
-        "isTransparent": false,
-        "autosize": true,
-        "largeChartUrl": ""
-    };
-    
-    script.text = JSON.stringify(config);
-    container.appendChild(script);
+
+    if (!timestamps.length) {
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.75rem;">⚠️ ไม่มีข้อมูลกราฟในช่วงนี้</div>';
+        return;
+    }
+
+    /* Prepare labels and filter null closes */
+    const isTH    = symbol.endsWith('.BK');
+    const currency = isTH ? '฿' : '$';
+    const points   = timestamps
+        .map((ts, i) => ({ ts, c: closes[i] }))
+        .filter(p => p.c != null);
+
+    const labels = points.map(p => {
+        const d = new Date(p.ts * 1000);
+        if (period === '1D') return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        return d.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
+    });
+    const data   = points.map(p => p.c);
+
+    const firstClose  = data[0];
+    const lastClose   = data[data.length - 1];
+    const isUp        = lastClose >= firstClose;
+    const lineColor   = isUp ? '#059669' : '#dc2626';
+    const fillColor   = isUp ? 'rgba(5,150,105,0.08)' : 'rgba(220,38,38,0.08)';
+
+    /* Render canvas */
+    container.innerHTML = '<canvas id="yf-canvas" style="width:100%;height:100%;"></canvas>';
+    const ctx = document.getElementById('yf-canvas').getContext('2d');
+
+    if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
+
+    _chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                data,
+                borderColor:     lineColor,
+                backgroundColor: fillColor,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                fill: true,
+                tension: 0.35,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 500 },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: ctx => currency + ctx.parsed.y.toFixed(2)
+                    },
+                    backgroundColor: '#1e293b',
+                    titleColor: '#94a3b8',
+                    bodyColor: '#f1f5f9',
+                    padding: 8,
+                    cornerRadius: 6,
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 9, family: 'Inter' },
+                        color: '#94a3b8',
+                        maxTicksLimit: 6,
+                        maxRotation: 0,
+                    }
+                },
+                y: {
+                    position: 'right',
+                    grid: { color: 'rgba(226,232,240,0.6)' },
+                    ticks: {
+                        font: { size: 9, family: 'Inter' },
+                        color: '#94a3b8',
+                        callback: v => currency + v.toFixed(2),
+                        maxTicksLimit: 5,
+                    }
+                }
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+        }
+    });
 }
 
 async function searchStockPrice() {
@@ -1362,10 +1479,10 @@ async function searchStockPrice() {
                     <span style="color:var(--text-primary); font-size:0.78rem;">${entryRangeHtml}</span>
                 </div>
                 
-                <!-- Tabs for News vs Chart -->
+                        <!-- Tabs for News vs Chart -->
                 <div style="display:flex; border-bottom:1px solid var(--border); margin-top:0.4rem; gap:0.5rem;">
                     <button id="analysis-tab-news" class="btn" style="background:transparent; border:none; border-bottom:2px solid var(--accent-blue); border-radius:0; color:var(--accent-blue); padding:0.25rem 0.5rem; font-size:0.68rem; line-height:1;" onclick="switchAnalysisTab('news')">📰 ข่าวสารล่าสุด</button>
-                    <button id="analysis-tab-chart" class="btn" style="background:transparent; border:none; border-radius:0; color:var(--text-muted); padding:0.25rem 0.5rem; font-size:0.68rem; line-height:1;" onclick="switchAnalysisTab('chart')">📈 กราฟเทคนิค</button>
+                    <button id="analysis-tab-chart" class="btn" style="background:transparent; border:none; border-radius:0; color:var(--text-muted); padding:0.25rem 0.5rem; font-size:0.68rem; line-height:1;" onclick="switchAnalysisTab('chart'); loadAndRenderChart('${symbol}', _activeChartRange)">📈 กราฟราคา Real-Time</button>
                 </div>
                 
                 <!-- Content Area -->
@@ -1374,12 +1491,17 @@ async function searchStockPrice() {
                 </div>
                 
                 <div id="analysis-tab-content-chart" style="display:${activeAnalysisTab==='chart'?'block':'none'}; margin-top:0.4rem;">
-                    <div id="tv-mini-chart" style="height:140px; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:#f8fafc;"></div>
+                    <!-- Period buttons -->
+                    <div style="display:flex; gap:0.3rem; margin-bottom:0.4rem; flex-wrap:wrap;">
+                        ${['1D','5D','1M','3M','6M','1Y'].map(p => `<button id="chart-btn-${p}" onclick="loadAndRenderChart('${symbol}','${p}')" style="font-size:0.65rem; padding:0.2rem 0.5rem; border-radius:4px; border:1px solid var(--border); background:${p==='5D'?'var(--accent-blue)':'transparent'}; color:${p==='5D'?'#fff':'var(--text-muted)'}; cursor:pointer; font-family:Inter,sans-serif;">${p}</button>`).join('')}
+                    </div>
+                    <!-- Chart canvas area -->
+                    <div id="yf-chart-area" style="height:160px; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:#f8fafc; padding:4px;"></div>
                 </div>
             </div>`;
             
-        // Render TradingView mini chart in background
-        renderMiniChart(symbol);
+        // Auto-load real-time chart
+        loadAndRenderChart(symbol, '5D');
     } else {
         resultBox.innerHTML = `
             <div style="color:var(--accent-red); font-weight:600;">
