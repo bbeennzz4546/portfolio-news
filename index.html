@@ -576,6 +576,15 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// Compatibility polyfill for older browsers
+if (typeof AbortSignal !== 'undefined' && !AbortSignal.timeout) {
+    AbortSignal.timeout = function(ms) {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), ms);
+        return controller.signal;
+    };
+}
+
 /* ══════════════════════════════════════════
    CONFIGURATION — รายชื่อเริ่มต้น (Fallback)
    ดึงข้อมูลผ่าน API อัตโนมัติ
@@ -713,9 +722,11 @@ function analyzeSentiment(symbol) {
 
     let score = 0;
     news.forEach(n => {
-        const title = n.title.toLowerCase();
-        posWords.forEach(w => { if (title.includes(w)) score++; });
-        negWords.forEach(w => { if (title.includes(w)) score--; });
+        if (n && n.title) {
+            const title = n.title.toLowerCase();
+            posWords.forEach(w => { if (title.includes(w)) score++; });
+            negWords.forEach(w => { if (title.includes(w)) score--; });
+        }
     });
 
     if (score > 0) {
@@ -731,9 +742,12 @@ function analyzeSentiment(symbol) {
    REAL-TIME PRICES (Twelve Data API / Yahoo Finance fallback)
 ══════════════════════════════════════════ */
 async function fetchPrices() {
-    const tdKey = localStorage.getItem('pnws_twelvedata_key');
+    let tdKey = null;
+    try {
+        tdKey = localStorage.getItem('pnws_twelvedata_key');
+    } catch(e) {}
+    
     const symbols = tickers.map(t => t.symbol);
-
     if (symbols.length === 0) return;
 
     // A. Use Twelve Data if API Key is configured (100% stable & fast)
@@ -764,7 +778,6 @@ async function fetchPrices() {
     }
 
     // B. Fallback: Yahoo Finance via AllOrigins (best-effort)
-    // Run async in background without blocking UI
     symbols.forEach(async sym => {
         try {
             const url = `https://api.allorigins.win/get?url=${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + sym + '?interval=1d&range=1d')}`;
@@ -780,7 +793,7 @@ async function fetchPrices() {
                 }
             }
         } catch(e) {
-            // keep existing price or —
+            // keep existing price
         }
     });
 }
@@ -1047,7 +1060,9 @@ async function removeTicker(symbol) {
 }
 
 async function saveAndSync() {
-    localStorage.setItem('pnws_tickers', JSON.stringify(tickers));
+    try {
+        localStorage.setItem('pnws_tickers', JSON.stringify(tickers));
+    } catch(e) {}
     renderGrid();
     renderSummaryTable();
     renderTradingViewWidget();
@@ -1060,9 +1075,11 @@ async function saveAndSync() {
 ══════════════════════════════════════════ */
 function openSettings() {
     document.getElementById('tickerTextarea').value = tickers.map(t=>t.symbol).join('\n');
-    document.getElementById('ghToken').value = localStorage.getItem('pnws_github_token') || '';
-    document.getElementById('ghRepo').value = localStorage.getItem('pnws_github_repo') || '';
-    document.getElementById('tdKey').value = localStorage.getItem('pnws_twelvedata_key') || '';
+    try {
+        document.getElementById('ghToken').value = localStorage.getItem('pnws_github_token') || '';
+        document.getElementById('ghRepo').value = localStorage.getItem('pnws_github_repo') || '';
+        document.getElementById('tdKey').value = localStorage.getItem('pnws_twelvedata_key') || '';
+    } catch(e) {}
     document.getElementById('settingsModal').classList.add('open');
     switchTab('tickers');
 }
@@ -1115,13 +1132,14 @@ function saveGitHubSettings() {
     const repo = document.getElementById('ghRepo').value.trim();
     const tdKey = document.getElementById('tdKey').value.trim();
 
-    localStorage.setItem('pnws_github_token', token);
-    localStorage.setItem('pnws_github_repo', repo);
-    localStorage.setItem('pnws_twelvedata_key', tdKey);
+    try {
+        localStorage.setItem('pnws_github_token', token);
+        localStorage.setItem('pnws_github_repo', repo);
+        localStorage.setItem('pnws_twelvedata_key', tdKey);
+    } catch(e) {}
 
     toast('💾 บันทึกการตั้งค่าระบบแล้ว!');
     closeSettings();
-    // Trigger price fetch in case key was just added
     fetchPrices();
 }
 
@@ -1129,8 +1147,12 @@ function saveGitHubSettings() {
    GITHUB AUTO-SYNC VIA PORTFOLIO.JSON
 ══════════════════════════════════════════ */
 async function syncToGitHub(newTickers) {
-    const token = localStorage.getItem('pnws_github_token');
-    const repo = localStorage.getItem('pnws_github_repo');
+    let token = null, repo = null;
+    try {
+        token = localStorage.getItem('pnws_github_token');
+        repo = localStorage.getItem('pnws_github_repo');
+    } catch(e) {}
+    
     if (!token || !repo) return;
 
     const url = `https://api.github.com/repos/${repo}/contents/portfolio.json`;
@@ -1185,7 +1207,9 @@ async function initTickers() {
             const data = await r.json();
             if (Array.isArray(data) && data.length > 0) {
                 tickers = data;
-                localStorage.setItem('pnws_tickers', JSON.stringify(tickers));
+                try {
+                    localStorage.setItem('pnws_tickers', JSON.stringify(tickers));
+                } catch(e) {}
                 return;
             }
         }
@@ -1194,7 +1218,11 @@ async function initTickers() {
     }
 
     // 2. Try loading from localStorage
-    const saved = localStorage.getItem('pnws_tickers');
+    let saved = null;
+    try {
+        saved = localStorage.getItem('pnws_tickers');
+    } catch(e) {}
+    
     if (saved) {
         try {
             tickers = JSON.parse(saved);
@@ -1228,14 +1256,18 @@ const CACHE_KEY = 'pnws_cache_v2';
 
 function persistCache() {
     try {
+        const cacheData = {};
+        for (const k in cache) {
+            if (cache.hasOwnProperty(k)) {
+                const v = cache[k];
+                cacheData[k] = Array.isArray(v)
+                    ? v.map(n => ({...n, pubDate: n.pubDate ? n.pubDate.toISOString() : null}))
+                    : v;
+            }
+        }
         localStorage.setItem(CACHE_KEY, JSON.stringify({
             ts: new Date().toISOString(),
-            data: Object.fromEntries(
-                Object.entries(cache).map(([k,v]) => [k, Array.isArray(v)
-                    ? v.map(n=>({...n, pubDate: n.pubDate ? n.pubDate.toISOString() : null}))
-                    : v
-                ])
-            )
+            data: cacheData
         }));
     } catch(e) { console.warn('Cache write failed'); }
 }
@@ -1369,11 +1401,14 @@ function startTickers() {
 
     const saved = restoreCache();
     if (saved && !needsRefresh(saved.ts)) {
-        Object.entries(saved.data).forEach(([sym,news])=>{
-            cache[sym] = Array.isArray(news)
-                ? news.map(n=>({...n, pubDate:n.pubDate?new Date(n.pubDate):null}))
-                : news;
-        });
+        for (const sym in saved.data) {
+            if (saved.data.hasOwnProperty(sym)) {
+                const news = saved.data[sym];
+                cache[sym] = Array.isArray(news)
+                    ? news.map(n=>({...n, pubDate:n.pubDate?new Date(n.pubDate):null}))
+                    : news;
+            }
+        }
         updateLastTime(new Date(saved.ts));
         renderGrid();
         renderSummaryTable();
