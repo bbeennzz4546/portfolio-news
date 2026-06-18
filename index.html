@@ -438,28 +438,6 @@
     </div>
 </div>
 
-<!-- ═══ SUMMARY TABLE SECTION ═══ -->
-<section class="summary-table-section">
-    <h3 style="font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-bottom:0.5rem; display:flex; align-items:center; gap:0.4rem;">
-        📊 ตารางวิเคราะห์สรุปความพึงพอใจข่าวสาร & สถานะการลงทุน (Portfolio Health Summary)
-    </h3>
-    <div class="table-container">
-        <table class="summary-table">
-            <thead>
-                <tr>
-                    <th style="width: 25%">ชื่อหุ้น (Stock Name)</th>
-                    <th style="width: 20%; text-align: right;">ราคาสด (Live Price)</th>
-                    <th style="width: 30%">ผลประเมินข่าว (News Sentiment)</th>
-                    <th style="width: 25%; text-align: center;">สถานะแนะนำ (Status Recommendation)</th>
-                </tr>
-            </thead>
-            <tbody id="summaryTableBody">
-                <!-- Dynamic summary content -->
-            </tbody>
-        </table>
-    </div>
-</section>
-
 <!-- ═══ REAL-TIME PRICE SEARCH & ANALYSIS ═══ -->
 <section class="widget-section" style="padding: 0 1.75rem 0.5rem; margin-top: 1.25rem;">
     <div class="widget-grid">
@@ -552,6 +530,28 @@
                 <span id="usdThbEntry" style="color:var(--text-primary); font-size:0.75rem;">กำลังคำนวณ...</span>
             </div>
         </div>
+    </div>
+</section>
+
+<!-- ═══ SUMMARY TABLE SECTION ═══ -->
+<section class="summary-table-section">
+    <h3 style="font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-bottom:0.5rem; display:flex; align-items:center; gap:0.4rem;">
+        📊 ตารางวิเคราะห์สรุปความพึงพอใจข่าวสาร & สถานะการลงทุน (Portfolio Health Summary)
+    </h3>
+    <div class="table-container">
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%">ชื่อหุ้น (Stock Name)</th>
+                    <th style="width: 20%; text-align: right;">ราคาสด (Live Price)</th>
+                    <th style="width: 30%">ผลประเมินข่าว (News Sentiment)</th>
+                    <th style="width: 25%; text-align: center;">สถานะแนะนำ (Status Recommendation)</th>
+                </tr>
+            </thead>
+            <tbody id="summaryTableBody">
+                <!-- Dynamic summary content -->
+            </tbody>
+        </table>
     </div>
 </section>
 
@@ -1652,7 +1652,23 @@ async function fetchTechnicals(symbol) {
         if (ma20 && ma50 && ma20 < ma50) techScore--;  // Death cross region
 
         const regularPrice = result.meta.regularMarketPrice || lastClose;
-        const prevClose = result.meta.chartPreviousClose || result.meta.previousClose || lastClose;
+        let prevClose = result.meta.previousClose || lastClose;
+        if (closes.length >= 2) {
+            const timestamps = result.timestamp || [];
+            if (timestamps.length > 0) {
+                const lastTs = timestamps[timestamps.length - 1] * 1000;
+                const lastDate = new Date(lastTs).toDateString();
+                const todayDate = new Date().toDateString();
+                
+                if (lastDate === todayDate) {
+                    prevClose = closes[closes.length - 2];
+                } else {
+                    prevClose = closes[closes.length - 1];
+                }
+            } else {
+                prevClose = closes[closes.length - 2];
+            }
+        }
 
         return { rsi, ma20, ma50, ma100, ma200, lastClose, support30, resist30, support90, resist90, techScore, macd, regularPrice, prevClose };
     } catch(e) {
