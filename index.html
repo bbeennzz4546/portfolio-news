@@ -781,16 +781,38 @@ async function fetchTicker(symbol) {
 
     let items = [];
 
-    /* ── 1. Yahoo Finance RSS via rss2json (great for US stocks) ── */
-    const yahooRss = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${symbol}&region=${region}`;
-    const yahooData = await safeFetchJson(
-        `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(yahooRss)}&count=10`
-    );
-    if (yahooData?.status === 'ok' && yahooData.items?.length > 0) {
-        items = yahooData.items;
+    /* ── 1. For non-Thai stocks: Try Yahoo Finance Search API via CORS Proxy (extremely fast & robust) ── */
+    if (!isThai) {
+        try {
+            const yfSearchUrl = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yfSearchUrl)}`;
+            const d = await safeFetchJson(proxyUrl, 4000); // 4 seconds timeout
+            if (d && d.news && d.news.length > 0) {
+                items = d.news.map(item => ({
+                    title: item.title || '',
+                    link: item.link || '#',
+                    author: item.publisher || 'Yahoo Finance',
+                    pubDate: item.providerPublishTime ? new Date(item.providerPublishTime * 1000) : null
+                }));
+            }
+        } catch(e) {
+            console.warn(`[${symbol}] Yahoo search news failed, falling back to RSS`);
+        }
     }
 
-    /* ── 2. Google News RSS via rss2json (Thai stocks + small caps) ── */
+    /* ── 2. Yahoo Finance RSS via rss2json (as fallback for US, or if search failed) ── */
+    if (items.length === 0 && !isThai) {
+        const yahooRss = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${symbol}&region=${region}`;
+        const yahooData = await safeFetchJson(
+            `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(yahooRss)}&count=10`,
+            5000 // 5 seconds timeout
+        );
+        if (yahooData?.status === 'ok' && yahooData.items?.length > 0) {
+            items = yahooData.items;
+        }
+    }
+
+    /* ── 3. Google News RSS via rss2json (for Thai stocks, or as secondary fallback) ── */
     if (items.length === 0) {
         let rawQ = isThai ? `${symbol.replace('.BK','')} หุ้น` : `${symbol} stock news`;
         if (symbol === 'GC=F') {
@@ -803,14 +825,15 @@ async function fetchTicker(symbol) {
         const ceid = (isThai || symbol === 'GC=F' || symbol === 'USDTHB=X') ? 'TH:th' : 'US:en';
         const gRss = `https://news.google.com/rss/search?q=${encodeURIComponent(rawQ)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
         const gData = await safeFetchJson(
-            `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(gRss)}&count=10`
+            `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(gRss)}&count=10`,
+            5000 // 5 seconds timeout
         );
         if (gData?.status === 'ok' && gData.items?.length > 0) {
             items = gData.items;
         }
     }
 
-    /* ── 3. Last resort: CORS proxy + client-side XML parser ── */
+    /* ── 4. Last resort: CORS proxy + client-side XML parser ── */
     if (items.length === 0) {
         try {
             let rawQ = isThai ? `${symbol.replace('.BK','')} หุ้น` : `${symbol} stock`;
