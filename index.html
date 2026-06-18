@@ -502,29 +502,55 @@
 
 <!-- ═══ GOLD & CURRENCY INFO BAR ═══ -->
 <section style="padding: 0 1.75rem; margin-top: 0.5rem; margin-bottom: 0.75rem;">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
         <!-- Left: Gold Price Card -->
-        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1.15rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02); min-height: 54px;">
-            <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <span style="font-size: 1.35rem; display: flex; align-items: center; justify-content: center;">🏆</span>
-                <div>
-                    <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); line-height: 1.2;">ราคาทอง Spot (USD/oz)</div>
-                    <div id="goldPrice" style="font-size: 0.95rem; font-weight: 800; font-family: 'Inter', monospace; color: var(--text-primary); margin-top: 1px; display: flex; align-items: center; gap: 0.35rem;">กำลังโหลด...</div>
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.65rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <span style="font-size: 1.35rem; display: flex; align-items: center; justify-content: center;">🏆</span>
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); line-height: 1.2;">ราคาทอง Spot (USD/oz)</div>
+                        <div id="goldPrice" style="font-size: 1.25rem; font-weight: 800; font-family: 'Inter', monospace; color: var(--text-primary); margin-top: 2px;">กำลังโหลด...</div>
+                    </div>
                 </div>
+                <div id="goldTime" style="font-size: 0.65rem; color: var(--text-muted); text-align: right;">—</div>
             </div>
-            <div id="goldTime" style="font-size: 0.62rem; color: var(--text-muted); text-align: right;">—</div>
+            
+            <div id="goldTrend" style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem;">
+                แนวโน้มตอนนี้: <span style="color: var(--text-muted); font-weight: normal;">กำลังคำนวณ...</span>
+            </div>
+
+            <div id="goldTech"></div>
+
+            <div style="background:rgba(37,99,235,0.04); border:1px solid rgba(37,99,235,0.15); border-radius:6px; padding:0.5rem 0.65rem; font-size:0.68rem; display:flex; flex-direction:column; gap:0.25rem; box-sizing: border-box;">
+                <span style="color:var(--text-secondary); font-weight:600;">🎯 ราคาตั้งรับที่แนะนำ (Entry Price):</span>
+                <span id="goldEntry" style="color:var(--text-primary); font-size:0.75rem;">กำลังคำนวณ...</span>
+            </div>
         </div>
 
         <!-- Right: USD/THB Card -->
-        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1.15rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02); min-height: 54px;">
-            <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <span style="font-size: 1.35rem; display: flex; align-items: center; justify-content: center;">💵</span>
-                <div>
-                    <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); line-height: 1.2;">อัตราแลกเปลี่ยน (USD/THB)</div>
-                    <div id="usdThbPrice" style="font-size: 0.95rem; font-weight: 800; font-family: 'Inter', monospace; color: var(--text-primary); margin-top: 1px; display: flex; align-items: center; gap: 0.35rem;">กำลังโหลด...</div>
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.65rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <span style="font-size: 1.35rem; display: flex; align-items: center; justify-content: center;">💵</span>
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); line-height: 1.2;">อัตราแลกเปลี่ยน (USD/THB)</div>
+                        <div id="usdThbPrice" style="font-size: 1.25rem; font-weight: 800; font-family: 'Inter', monospace; color: var(--text-primary); margin-top: 2px;">กำลังโหลด...</div>
+                    </div>
                 </div>
+                <div id="usdThbTime" style="font-size: 0.65rem; color: var(--text-muted); text-align: right;">—</div>
             </div>
-            <div id="usdThbTime" style="font-size: 0.62rem; color: var(--text-muted); text-align: right;">—</div>
+            
+            <div id="usdThbTrend" style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem;">
+                แนวโน้มตอนนี้: <span style="color: var(--text-muted); font-weight: normal;">กำลังคำนวณ...</span>
+            </div>
+
+            <div id="usdThbTech"></div>
+
+            <div style="background:rgba(37,99,235,0.04); border:1px solid rgba(37,99,235,0.15); border-radius:6px; padding:0.5rem 0.65rem; font-size:0.68rem; display:flex; flex-direction:column; gap:0.25rem; box-sizing: border-box;">
+                <span style="color:var(--text-secondary); font-weight:600;">🎯 อัตราที่แนะนำ/ตั้งรับ (Target Rate):</span>
+                <span id="usdThbEntry" style="color:var(--text-primary); font-size:0.75rem;">กำลังคำนวณ...</span>
+            </div>
         </div>
     </div>
 </section>
@@ -766,10 +792,15 @@ async function fetchTicker(symbol) {
 
     /* ── 2. Google News RSS via rss2json (Thai stocks + small caps) ── */
     if (items.length === 0) {
-        const rawQ = isThai ? `${symbol.replace('.BK','')} หุ้น` : `${symbol} stock news`;
-        const gl   = isThai ? 'TH' : 'US';
-        const hl   = isThai ? 'th' : 'en';
-        const ceid = isThai ? 'TH:th' : 'US:en';
+        let rawQ = isThai ? `${symbol.replace('.BK','')} หุ้น` : `${symbol} stock news`;
+        if (symbol === 'GC=F') {
+            rawQ = 'ราคาทองคำ Gold Spot';
+        } else if (symbol === 'USDTHB=X') {
+            rawQ = 'ค่าเงินบาท USD THB';
+        }
+        const gl   = (isThai || symbol === 'GC=F' || symbol === 'USDTHB=X') ? 'TH' : 'US';
+        const hl   = (isThai || symbol === 'GC=F' || symbol === 'USDTHB=X') ? 'th' : 'en';
+        const ceid = (isThai || symbol === 'GC=F' || symbol === 'USDTHB=X') ? 'TH:th' : 'US:en';
         const gRss = `https://news.google.com/rss/search?q=${encodeURIComponent(rawQ)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
         const gData = await safeFetchJson(
             `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(gRss)}&count=10`
@@ -782,10 +813,15 @@ async function fetchTicker(symbol) {
     /* ── 3. Last resort: CORS proxy + client-side XML parser ── */
     if (items.length === 0) {
         try {
-            const rawQ = isThai ? `${symbol.replace('.BK','')} หุ้น` : `${symbol} stock`;
-            const gl   = isThai ? 'TH' : 'US';
-            const hl   = isThai ? 'th' : 'en';
-            const ceid = isThai ? 'TH:th' : 'US:en';
+            let rawQ = isThai ? `${symbol.replace('.BK','')} หุ้น` : `${symbol} stock`;
+            if (symbol === 'GC=F') {
+                rawQ = 'ราคาทองคำ Gold Spot';
+            } else if (symbol === 'USDTHB=X') {
+                rawQ = 'ค่าเงินบาท USD THB';
+            }
+            const gl   = (isThai || symbol === 'GC=F' || symbol === 'USDTHB=X') ? 'TH' : 'US';
+            const hl   = (isThai || symbol === 'GC=F' || symbol === 'USDTHB=X') ? 'th' : 'en';
+            const ceid = (isThai || symbol === 'GC=F' || symbol === 'USDTHB=X') ? 'TH:th' : 'US:en';
             const gRss = `https://news.google.com/rss/search?q=${encodeURIComponent(rawQ)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
             const xml  = await fetchXmlWithProxy(gRss);
             if (xml) {
@@ -867,22 +903,33 @@ let techCache = {};
 function analyzeSentiment(symbol) {
     const tech = techCache[symbol] || null;
     const news = cache[symbol];
-    if (news === undefined) return { text: '⏳ กำลังโหลดข่าว...', status: 'HOLD', dot: '⚪' };
-    if (news === null) return { text: '⚠️ ดึงข่าวสารไม่ได้', status: 'HOLD', dot: '⚪' };
-    if (!Array.isArray(news) || news.length === 0) return { text: '📭 ไม่มีข่าวล่าสุด', status: 'HOLD', dot: '⚪' };
-
-    // Keywords to evaluate news sentiment
-    const posWords = ['up', 'gain', 'rise', 'higher', 'buy', 'bull', 'grow', 'surge', 'soar', 'jump', 'beat', 'upgrade', 'outperform', 'profit', 'positive', 'strong', 'rally', 'advances', 'bullish', 'wins', 'adds', 'high', 'optimism', 'beat expectation'];
-    const negWords = ['down', 'drop', 'fall', 'lower', 'sell', 'bear', 'decline', 'plummet', 'sink', 'slide', 'miss', 'downgrade', 'underperform', 'loss', 'negative', 'weak', 'plunge', 'revolt', 'slump', 'bearish', 'cut', 'warning', 'low', 'pessimism', 'layoff', 'protest'];
 
     let score = 0;
-    news.forEach(n => {
-        if (n && n.title) {
-            const title = n.title.toLowerCase();
-            posWords.forEach(w => { if (title.includes(w)) score++; });
-            negWords.forEach(w => { if (title.includes(w)) score--; });
-        }
-    });
+    const hasNews = Array.isArray(news) && news.length > 0;
+
+    if (hasNews) {
+        // Keywords to evaluate news sentiment
+        const posWords = ['up', 'gain', 'rise', 'higher', 'buy', 'bull', 'grow', 'surge', 'soar', 'jump', 'beat', 'upgrade', 'outperform', 'profit', 'positive', 'strong', 'rally', 'advances', 'bullish', 'wins', 'adds', 'high', 'optimism', 'beat expectation'];
+        const negWords = ['down', 'drop', 'fall', 'lower', 'sell', 'bear', 'decline', 'plummet', 'sink', 'slide', 'miss', 'downgrade', 'underperform', 'loss', 'negative', 'weak', 'plunge', 'revolt', 'slump', 'bearish', 'cut', 'warning', 'low', 'pessimism', 'layoff', 'protest'];
+        const thPosWords = ['ขึ้น', 'บวก', 'เติบโต', 'กำไร', 'ดี', 'พุ่ง', 'หนุน', 'เป้า', 'ฟื้น', 'แกร่ง', 'ชนะ', 'เพิ่ม', 'สูง', 'เด่น'];
+        const thNegWords = ['ลด', 'ลง', 'ขาย', 'ต่ำกว่าคาด', 'หดตัว', 'ชะลอ', 'กังวล', 'วิกฤต', 'ทรุด', 'เสี่ยง', 'ฉุด', 'แย่', 'ฟุบ', 'หนี้'];
+
+        news.forEach(n => {
+            if (n && n.title) {
+                const title = n.title.toLowerCase();
+                posWords.forEach(w => { if (title.includes(w)) score++; });
+                negWords.forEach(w => { if (title.includes(w)) score--; });
+                thPosWords.forEach(w => { if (title.includes(w)) score++; });
+                thNegWords.forEach(w => { if (title.includes(w)) score--; });
+            }
+        });
+    }
+
+    if (!tech && !hasNews) {
+        if (news === undefined) return { text: '⏳ กำลังโหลดข่าว...', status: 'HOLD', dot: '⚪' };
+        if (news === null) return { text: '⚠️ ดึงข่าวสารไม่ได้', status: 'HOLD', dot: '⚪' };
+        return { text: '📭 ไม่มีข่าวล่าสุด', status: 'HOLD', dot: '⚪' };
+    }
 
     const totalScore = score + (tech?.techScore ?? 0);
     if (totalScore >= 3) {
@@ -950,24 +997,101 @@ async function fetchPrices() {
     });
 }
 
-async function fetchMacroData() {
-    const safeGet = async (url, ms = 9000) => {
-        try {
-            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
-            const r = await Promise.race([fetch(url), timeout]);
-            if (r.ok) return await r.json();
-        } catch(e) {}
-        return null;
+function renderMacroTechnicals(tech, currency, decimalDigits = 2) {
+    if (!tech) return '<div style="color:var(--text-muted); font-size:0.65rem; padding: 0.5rem 0;">ไม่สามารถดึงข้อมูลเทคนิคได้</div>';
+    
+    // RSI formatting
+    const rsiColor = tech.rsi < 30 ? '#059669'
+        : tech.rsi > 70 ? '#dc2626'
+        : tech.rsi < 45 ? '#16a34a'
+        : '#d97706';
+    const rsiLabel = tech.rsi < 30 ? `${tech.rsi.toFixed(0)} ⚠️ Oversold`
+        : tech.rsi > 70 ? `${tech.rsi.toFixed(0)} ⚠️ Overbought`
+        : tech.rsi.toFixed(0);
+
+    // MA formatting
+    const maRow = (label, val) => {
+        if (!val) return '';
+        const up = tech.regularPrice >= val;
+        return `<span style="font-size:0.63rem; padding:0.15rem 0.4rem; border-radius:4px; background:${up?'rgba(5,150,105,0.1)':'rgba(220,38,38,0.08)'}; color:${up?'#059669':'#dc2626'}; font-weight:600; white-space:nowrap;">${label}: ${currency}${val.toFixed(decimalDigits)} ${up?'▲':'▼'}</span>`;
     };
+    const maHtml = [maRow('MA20', tech.ma20), maRow('MA50', tech.ma50), maRow('MA100', tech.ma100), maRow('MA200', tech.ma200)].filter(Boolean).join('');
 
-    const goldUrl = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=1d')}`;
-    const forexUrl = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/USDTHB=X?interval=1d&range=1d')}`;
+    // MACD formatting
+    let macdHtml = '';
+    if (tech.macd) {
+        const isBull = tech.macd.hist >= 0;
+        const macdColor = isBull ? '#059669' : '#dc2626';
+        const macdBg = isBull ? 'rgba(5,150,105,0.1)' : 'rgba(220,38,38,0.08)';
+        const macdStatus = isBull ? 'Bullish Crossover ▲' : 'Bearish Crossover ▼';
+        macdHtml = `<span style="font-size:0.63rem; padding:0.15rem 0.4rem; border-radius:4px; background:${macdBg}; color:${macdColor}; font-weight:600; white-space:nowrap;">MACD: ${macdStatus}</span>`;
+    }
 
-    // Fetch Gold Spot
-    safeGet(goldUrl, 9000).then(d => {
+    // S/R levels
+    const srHtml = `
+        <div style="font-size:0.63rem; display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.3rem;">
+            <span style="color:var(--accent-green);">&#9711; แนวรับ 30 วัน: <strong>${currency}${tech.support30.toFixed(decimalDigits)}</strong></span>
+            <span style="color:var(--accent-red);">&#9711; แนวต้าน 30 วัน: <strong>${currency}${tech.resist30.toFixed(decimalDigits)}</strong></span>
+        </div>
+        <div style="font-size:0.63rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <span style="color:var(--accent-green); opacity:0.75;">&#9711; แนวรับ 90 วัน: <strong>${currency}${tech.support90.toFixed(decimalDigits)}</strong></span>
+            <span style="color:var(--accent-red); opacity:0.75;">&#9711; แนวต้าน 90 วัน: <strong>${currency}${tech.resist90.toFixed(decimalDigits)}</strong></span>
+        </div>`;
+
+    return `
+        <div style="background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:0.5rem 0.65rem; box-sizing:border-box; width:100%;">
+            <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">📊 Technical Indicators (ข้อมูลราคาจริง)</div>
+            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.3rem;">
+                <span style="font-size:0.63rem; font-weight:700; color:${rsiColor}; white-space:nowrap;">RSI(14): ${rsiLabel}</span>
+                ${macdHtml}
+                ${maHtml}
+            </div>
+            ${srHtml}
+        </div>`;
+}
+
+function calcMacroEntryRange(tech, currency, decimalDigits = 2) {
+    if (!tech) return '—';
+    
+    const price = tech.regularPrice;
+    const nearestSupport = tech.support30;
+    const pctFromSupport = ((price - nearestSupport) / price) * 100;
+
+    let entryLow, entryHigh, entryNote;
+    if (pctFromSupport < 1) {
+        entryLow  = nearestSupport;
+        entryHigh = nearestSupport * 1.02;
+        entryNote = `แนวรับ 30 วัน (${currency}${nearestSupport.toFixed(decimalDigits)})`;
+    } else if (pctFromSupport < 8) {
+        entryLow  = nearestSupport;
+        entryHigh = nearestSupport * 1.03;
+        entryNote = `แนวรับ 30 วัน (${currency}${nearestSupport.toFixed(decimalDigits)})`;
+    } else {
+        const anchor = (tech.ma20 && tech.ma20 < price) ? tech.ma20 : price * 0.97;
+        entryLow  = anchor * 0.99;
+        entryHigh = anchor * 1.01;
+        entryNote = tech.ma20 ? `แนว MA20 (${currency}${tech.ma20.toFixed(decimalDigits)})` : 'ราคาปัจจุบัน -3%';
+    }
+
+    return `<strong>${currency}${entryLow.toFixed(decimalDigits)} – ${currency}${entryHigh.toFixed(decimalDigits)}</strong> <span style="color:var(--text-muted); font-weight:normal;">(${entryNote})</span>`;
+}
+
+async function fetchMacroData() {
+    // Fetch news for GC=F and USDTHB=X in parallel first (non-blocking for technicals)
+    const [goldNews, usdThbNews] = await Promise.all([
+        fetchTicker('GC=F').catch(e => null),
+        fetchTicker('USDTHB=X').catch(e => null)
+    ]);
+    if (goldNews) cache['GC=F'] = goldNews;
+    if (usdThbNews) cache['USDTHB=X'] = usdThbNews;
+
+    // 1. Fetch Gold Spot (GC=F)
+    fetchTechnicals('GC=F').then(tech => {
         try {
-            const price = d.chart.result[0].meta.regularMarketPrice;
-            const prev = d.chart.result[0].meta.previousClose;
+            if (!tech) throw new Error('No data');
+            techCache['GC=F'] = tech;
+            const price = tech.regularPrice;
+            const prev = tech.prevClose;
             const change = price - prev;
             const pct = (change / prev) * 100;
             const sign = change >= 0 ? '+' : '';
@@ -979,18 +1103,39 @@ async function fetchMacroData() {
                     ${sign}${change.toFixed(2)} (${sign}${pct.toFixed(2)}%)
                 </span>`;
             
+            // Analyze overall sentiment including news and technicals
+            const sentiment = analyzeSentiment('GC=F');
+            let trendText = sentiment.text;
+            let trendColor = 'var(--text-secondary)';
+            if (sentiment.status === 'ADD') {
+                trendColor = '#059669';
+            } else if (sentiment.status === 'TRIM') {
+                trendColor = '#dc2626';
+            }
+            document.getElementById('goldTrend').innerHTML = `แนวโน้มตอนนี้: <span style="color:${trendColor}; font-weight:700;">${trendText} (อิงข่าว & เทคนิค)</span>`;
+            
+            // Technical indicators blocks
+            document.getElementById('goldTech').innerHTML = renderMacroTechnicals(tech, '$', 2);
+            document.getElementById('goldEntry').innerHTML = calcMacroEntryRange(tech, '$', 2);
+            
             const now = new Date();
             document.getElementById('goldTime').textContent = `อัปเดต: ${now.toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'})} น.`;
         } catch(e) {
+            console.error(e);
             document.getElementById('goldPrice').textContent = '⚠️ โหลดไม่สำเร็จ';
+            document.getElementById('goldTrend').innerHTML = `แนวโน้มตอนนี้: <span style="color:var(--text-muted); font-weight:normal;">ไม่สามารถคำนวณได้</span>`;
+            document.getElementById('goldTech').innerHTML = '';
+            document.getElementById('goldEntry').textContent = '—';
         }
     });
 
-    // Fetch USD/THB
-    safeGet(forexUrl, 9000).then(d => {
+    // 2. Fetch USD/THB (USDTHB=X)
+    fetchTechnicals('USDTHB=X').then(tech => {
         try {
-            const price = d.chart.result[0].meta.regularMarketPrice;
-            const prev = d.chart.result[0].meta.previousClose;
+            if (!tech) throw new Error('No data');
+            techCache['USDTHB=X'] = tech;
+            const price = tech.regularPrice;
+            const prev = tech.prevClose;
             const change = price - prev;
             const pct = (change / prev) * 100;
             const sign = change >= 0 ? '+' : '';
@@ -1002,10 +1147,29 @@ async function fetchMacroData() {
                     ${sign}${change.toFixed(4)} (${sign}${pct.toFixed(2)}%)
                 </span>`;
             
+            // Analyze overall sentiment including news and technicals
+            const sentiment = analyzeSentiment('USDTHB=X');
+            let trendText = sentiment.text;
+            let trendColor = 'var(--text-secondary)';
+            if (sentiment.status === 'ADD') {
+                trendColor = '#059669';
+            } else if (sentiment.status === 'TRIM') {
+                trendColor = '#dc2626';
+            }
+            document.getElementById('usdThbTrend').innerHTML = `แนวโน้มตอนนี้: <span style="color:${trendColor}; font-weight:700;">${trendText} (อิงข่าว & เทคนิค)</span>`;
+
+            // Technical indicators blocks
+            document.getElementById('usdThbTech').innerHTML = renderMacroTechnicals(tech, '฿', 4);
+            document.getElementById('usdThbEntry').innerHTML = calcMacroEntryRange(tech, '฿', 4);
+            
             const now = new Date();
             document.getElementById('usdThbTime').textContent = `อัปเดต: ${now.toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'})} น.`;
         } catch(e) {
+            console.error(e);
             document.getElementById('usdThbPrice').textContent = '⚠️ โหลดไม่สำเร็จ';
+            document.getElementById('usdThbTrend').innerHTML = `แนวโน้มตอนนี้: <span style="color:var(--text-muted); font-weight:normal;">ไม่สามารถคำนวณได้</span>`;
+            document.getElementById('usdThbTech').innerHTML = '';
+            document.getElementById('usdThbEntry').textContent = '—';
         }
     });
 }
@@ -1435,6 +1599,34 @@ async function fetchTechnicals(symbol) {
         };
         const rsi = calcRSI(closes);
 
+        /* ── MACD (12, 26, 9) ── */
+        const calcMACD = (arr) => {
+            if (arr.length < 35) return null;
+            let k12 = 2 / 13;
+            let k26 = 2 / 27;
+            let currentEma12 = arr[0];
+            let currentEma26 = arr[0];
+            
+            const macdLineArr = [];
+            for (let i = 0; i < arr.length; i++) {
+                currentEma12 = arr[i] * k12 + currentEma12 * (1 - k12);
+                currentEma26 = arr[i] * k26 + currentEma26 * (1 - k26);
+                macdLineArr.push(currentEma12 - currentEma26);
+            }
+            
+            const macdLine = macdLineArr[macdLineArr.length - 1];
+            
+            let k9 = 2 / 10;
+            let signalLine = macdLineArr[0];
+            for (let i = 0; i < macdLineArr.length; i++) {
+                signalLine = macdLineArr[i] * k9 + signalLine * (1 - k9);
+            }
+            
+            const hist = macdLine - signalLine;
+            return { macdLine, signalLine, hist };
+        };
+        const macd = calcMACD(closes);
+
         /* ── Support / Resistance (30-day & 90-day) ── */
         const last30Lows  = lows.slice(-30);
         const last30Highs = highs.slice(-30);
@@ -1459,7 +1651,10 @@ async function fetchTechnicals(symbol) {
         if (ma20 && ma50 && ma20 > ma50) techScore++;  // Golden cross region
         if (ma20 && ma50 && ma20 < ma50) techScore--;  // Death cross region
 
-        return { rsi, ma20, ma50, ma100, ma200, lastClose, support30, resist30, support90, resist90, techScore };
+        const regularPrice = result.meta.regularMarketPrice || lastClose;
+        const prevClose = result.meta.chartPreviousClose || result.meta.previousClose || lastClose;
+
+        return { rsi, ma20, ma50, ma100, ma200, lastClose, support30, resist30, support90, resist90, techScore, macd, regularPrice, prevClose };
     } catch(e) {
         console.warn('[technicals] failed', e.message);
         return null;
