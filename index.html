@@ -498,6 +498,34 @@
                 กรุณาพิมพ์ค้นหาหุ้นทางด้านซ้ายเพื่อแสดงข้อมูลวิเคราะห์ข่าวและราคาตั้งรับที่แนะนำ
             </div>
         </div>
+</section>
+
+<!-- ═══ GOLD & CURRENCY INFO BAR ═══ -->
+<section style="padding: 0 1.75rem; margin-top: 0.5rem; margin-bottom: 0.75rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+        <!-- Left: Gold Price Card -->
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1.15rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02); min-height: 54px;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="font-size: 1.35rem; display: flex; align-items: center; justify-content: center;">🏆</span>
+                <div>
+                    <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); line-height: 1.2;">ราคาทอง Spot (USD/oz)</div>
+                    <div id="goldPrice" style="font-size: 0.95rem; font-weight: 800; font-family: 'Inter', monospace; color: var(--text-primary); margin-top: 1px; display: flex; align-items: center; gap: 0.35rem;">กำลังโหลด...</div>
+                </div>
+            </div>
+            <div id="goldTime" style="font-size: 0.62rem; color: var(--text-muted); text-align: right;">—</div>
+        </div>
+
+        <!-- Right: USD/THB Card -->
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1.15rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02); min-height: 54px;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="font-size: 1.35rem; display: flex; align-items: center; justify-content: center;">💵</span>
+                <div>
+                    <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); line-height: 1.2;">อัตราแลกเปลี่ยน (USD/THB)</div>
+                    <div id="usdThbPrice" style="font-size: 0.95rem; font-weight: 800; font-family: 'Inter', monospace; color: var(--text-primary); margin-top: 1px; display: flex; align-items: center; gap: 0.35rem;">กำลังโหลด...</div>
+                </div>
+            </div>
+            <div id="usdThbTime" style="font-size: 0.62rem; color: var(--text-muted); text-align: right;">—</div>
+        </div>
     </div>
 </section>
 
@@ -821,6 +849,7 @@ async function fetchAll(forceRefresh=false) {
 
     persistCache();
     await fetchPrices(); // Fetch stock prices in background
+    fetchMacroData();
     renderSummaryTable();
     updateLastTime(new Date());
     setProgress(100);
@@ -918,6 +947,66 @@ async function fetchPrices() {
                 }
             } catch(e) {}
         });
+    });
+}
+
+async function fetchMacroData() {
+    const safeGet = async (url, ms = 9000) => {
+        try {
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+            const r = await Promise.race([fetch(url), timeout]);
+            if (r.ok) return await r.json();
+        } catch(e) {}
+        return null;
+    };
+
+    const goldUrl = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=1d')}`;
+    const forexUrl = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/USDTHB=X?interval=1d&range=1d')}`;
+
+    // Fetch Gold Spot
+    safeGet(goldUrl, 9000).then(d => {
+        try {
+            const price = d.chart.result[0].meta.regularMarketPrice;
+            const prev = d.chart.result[0].meta.previousClose;
+            const change = price - prev;
+            const pct = (change / prev) * 100;
+            const sign = change >= 0 ? '+' : '';
+            const color = change >= 0 ? '#059669' : '#dc2626';
+
+            document.getElementById('goldPrice').innerHTML = `
+                $${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                <span style="font-size:0.68rem; font-weight:600; color:${color}; margin-left:4px;">
+                    ${sign}${change.toFixed(2)} (${sign}${pct.toFixed(2)}%)
+                </span>`;
+            
+            const now = new Date();
+            document.getElementById('goldTime').textContent = `อัปเดต: ${now.toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'})} น.`;
+        } catch(e) {
+            document.getElementById('goldPrice').textContent = '⚠️ โหลดไม่สำเร็จ';
+        }
+    });
+
+    // Fetch USD/THB
+    safeGet(forexUrl, 9000).then(d => {
+        try {
+            const price = d.chart.result[0].meta.regularMarketPrice;
+            const prev = d.chart.result[0].meta.previousClose;
+            const change = price - prev;
+            const pct = (change / prev) * 100;
+            const sign = change >= 0 ? '+' : '';
+            const color = change >= 0 ? '#059669' : '#dc2626';
+
+            document.getElementById('usdThbPrice').innerHTML = `
+                ฿${price.toFixed(4)}
+                <span style="font-size:0.68rem; font-weight:600; color:${color}; margin-left:4px;">
+                    ${sign}${change.toFixed(4)} (${sign}${pct.toFixed(2)}%)
+                </span>`;
+            
+            const now = new Date();
+            document.getElementById('usdThbTime').textContent = `อัปเดต: ${now.toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'})} น.`;
+        } catch(e) {
+            document.getElementById('usdThbPrice').textContent = '⚠️ โหลดไม่สำเร็จ';
+        }
     });
 }
 
@@ -2127,9 +2216,11 @@ function esc(s) {
 function startTickers() {
     updateCountdown();
     updateMarketStatus();
+    fetchMacroData(); // initial fetch
     setInterval(updateCountdown, 1000); // update countdown every second
     setInterval(()=>{
         updateMarketStatus();
+        fetchMacroData(); // refresh gold/forex every minute
         if (!isFetching && needsRefresh(new Date().toISOString())) fetchAll(true);
     }, 60_000); // check every minute
 }
