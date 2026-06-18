@@ -1751,6 +1751,13 @@ async function saveAndSync() {
    MODAL TABS & SETTINGS
 ══════════════════════════════════════════ */
 function openSettings() {
+    const pwd = prompt('กรุณากรอกรหัสผ่านเพื่อเข้าสู่การตั้งค่า:');
+    if (pwd !== '1996') {
+        if (pwd !== null) {
+            alert('รหัสผ่านไม่ถูกต้อง!');
+        }
+        return;
+    }
     document.getElementById('tickerTextarea').value = tickers.map(t=>t.symbol).join('\n');
     try {
         document.getElementById('ghToken').value = localStorage.getItem('pnws_github_token') || '';
